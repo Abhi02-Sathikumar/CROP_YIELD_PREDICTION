@@ -24,6 +24,7 @@ Develop a crop water-stress alert system to identify potential irrigation needs.
 Create district-level choropleth maps to visualize regional yield performance.
 Develop an interactive dashboard for agricultural analytics and decision support.
 Generate downloadable seasonal crop reports containing yield predictions, risk factors, and irrigation recommendations.
+
 ✨ Key Features
 1. 🌱 Crop Yield Prediction
 
