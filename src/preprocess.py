@@ -101,14 +101,43 @@ def clean_crop_data(path):
 # --------------------------------------------------
 def clean_soil_data(path):
     """
-    Clean soil/crop recommendation data.
-
-    Supports columns such as:
-        N, P, K, temperature, humidity,
-        ph, rainfall, label
+    Load and clean soil/crop recommendation data.
     """
 
-    df = pd.read_csv(path)
+    import csv
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Soil dataset not found: {path}"
+        )
+
+    try:
+        df = pd.read_csv(
+            path,
+            encoding="utf-8-sig"
+        )
+
+    except pd.errors.ParserError as exc:
+        print(f"\nError reading soil CSV: {path}")
+        print("Checking the file's delimiter and rows...")
+
+        try:
+            df = pd.read_csv(
+                path,
+                sep=None,
+                engine="python",
+                encoding="utf-8-sig",
+                on_bad_lines="error"
+            )
+        except Exception as retry_exc:
+            raise ValueError(
+                f"Could not parse soil dataset: {path}\n"
+                "Check line 20 and the surrounding rows for "
+                "inconsistent commas, extra fields, or malformed "
+                "quoting. The file may not be a valid CSV.\n"
+                f"Original error: {exc}\n"
+                f"Retry error: {retry_exc}"
+            ) from retry_exc
 
     df.columns = (
         df.columns
@@ -141,7 +170,6 @@ def clean_soil_data(path):
             .str.strip()
         )
 
-    # Convert available soil measurements to numeric
     numeric_columns = [
         "N",
         "P",
@@ -155,11 +183,14 @@ def clean_soil_data(path):
     for col in numeric_columns:
         if col in df.columns:
             df[col] = pd.to_numeric(
-                df[col], errors="coerce"
+                df[col],
+                errors="coerce"
             )
 
-    return df
+    print("Soil dataset loaded:", df.shape)
+    print("Soil columns:", df.columns.tolist())
 
+    return df
 
 # --------------------------------------------------
 # 3. CLEAN PREPROCESSED WEATHER DATA
