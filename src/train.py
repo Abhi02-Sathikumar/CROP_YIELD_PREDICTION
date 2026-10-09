@@ -1,348 +1,626 @@
-import pandas as pd
-import numpy as np
+import os
+import warnings
 import joblib
+import numpy as np
+import pandas as pd
 
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.impute import SimpleImputer
-
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
-
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
     r2_score
 )
 
-from xgboost import XGBRegressor
+# XGBoost is optional
+try:
+    from xgboost import XGBRegressor
+    XGBOOST_AVAILABLE = True
+except ImportError:
+    XGBOOST_AVAILABLE = False
 
+
+# --------------------------------------------------
+# CONFIGURATION
+# --------------------------------------------------
 
 DATA_PATH = "data/training_data.csv"
+MODEL_DIR = "models"
+TARGET = "Yield"
+TEST_FRACTION = 0.20
+RANDOM_STATE = 42
 
 
 # --------------------------------------------------
-# Load data
+# 1. LOAD DATA
 # --------------------------------------------------
 
-df = pd.read_csv(DATA_PATH)
-
-df.columns = df.columns.str.strip()
-
-
-# --------------------------------------------------
-# Basic cleaning
-# --------------------------------------------------
-
-df = df.replace(
-    [np.inf, -np.inf],
-    np.nan
-)
-
-df = df.dropna(
-    subset=["Yield"]
-)
-
-
-# --------------------------------------------------
-# Features
-# --------------------------------------------------
-
-features = [
-    "Crop",
-    "District",
-    "Season",
-    "Rainfall",
-    "AvgTemperature",
-    "AvgHumidity",
-    "N",
-    "P",
-    "K",
-    "pH"
-]
-
-features = [
-    x for x in features
-    if x in df.columns
-]
-
-target = "Yield"
-
-
-print("Features:")
-print(features)
-
-
-# --------------------------------------------------
-# Remove rows with excessive missing values
-# --------------------------------------------------
-
-df = df.dropna(
-    subset=features,
-    how="all"
-)
-
-
-# --------------------------------------------------
-# Time based split
-# --------------------------------------------------
-
-df["Year"] = pd.to_numeric(
-    df["Year"],
-    errors="coerce"
-)
-
-df = df.dropna(
-    subset=["Year"]
-)
-
-df["Year"] = df["Year"].astype(int)
-
-
-train_df = df[
-    df["Year"] <= 2019
-]
-
-test_df = df[
-    df["Year"] > 2019
-]
-
-print(
-    "Training rows:",
-    len(train_df)
-)
-
-print(
-    "Testing rows:",
-    len(test_df)
-)
-
-
-X_train = train_df[features]
-y_train = train_df[target]
-
-X_test = test_df[features]
-y_test = test_df[target]
-
-
-# --------------------------------------------------
-# Preprocessing
-# --------------------------------------------------
-
-categorical_features = [
-    x for x in [
-        "Crop",
-        "District",
-        "Season"
-    ]
-    if x in features
-]
-
-numeric_features = [
-    x for x in features
-    if x not in categorical_features
-]
-
-
-preprocessor = ColumnTransformer(
-
-    transformers=[
-
-        (
-            "categorical",
-
-            Pipeline([
-                (
-                    "imputer",
-                    SimpleImputer(
-                        strategy="most_frequent"
-                    )
-                ),
-
-                (
-                    "encoder",
-                    OneHotEncoder(
-                        handle_unknown="ignore"
-                    )
-                )
-            ]),
-
-            categorical_features
-        ),
-
-        (
-            "numeric",
-
-            Pipeline([
-                (
-                    "imputer",
-                    SimpleImputer(
-                        strategy="median"
-                    )
-                )
-            ]),
-
-            numeric_features
+def load_data(path):
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Training dataset not found: {path}\n"
+            "Run src/preprocess.py first."
         )
+
+    df = pd.read_csv(path)
+    df.columns = df.columns.str.strip()
+
+    if TARGET not in df.columns:
+        raise ValueError(
+            f"Target '{TARGET}' not found.\n"
+            f"Available columns: {df.columns.tolist()}"
+        )
+
+    if "Year" not in df.columns:
+        raise ValueError(
+            "Year column is required for chronological evaluation."
+        )
+
+    df = df.replace([np.inf, -np.inf], np.nan)
+
+    df[TARGET] = pd.to_numeric(
+        df[TARGET], errors="coerce"
+    )
+
+    df["Year"] = pd.to_numeric(
+        df["Year"], errors="coerce"
+    )
+
+    df = df.dropna(subset=[TARGET, "Year"]).copy()
+    df["Year"] = df["Year"].round().astype(int)
+
+    # Yield must be a valid nonnegative value
+    df = df[df[TARGET] >= 0].copy()
+
+    if df.empty:
+        raise ValueError(
+            "No valid training rows remain after cleaning."
+        )
+
+    return df
+
+
+# --------------------------------------------------
+# 2. STANDARDIZE FEATURE NAMES
+# --------------------------------------------------
+
+def standardize_features(df):
+    """
+    Support both the original trainer's expected names
+    and the columns generated by weather_preprocessed.csv.
+    """
+
+    aliases = {
+        "state": "State",
+        "district_name": "District",
+        "district": "District",
+        "state_name": "State",
+        "crop": "Crop",
+        "season": "Season",
+        "year": "Year",
+        "rainfall": "Rainfall",
+        "avgtemperature": "AvgTemperature",
+        "avgtemperature_c": "AvgTemperature",
+        "avghumidity": "AvgHumidity",
+        "ph": "pH",
+        "n": "N",
+        "p": "P",
+        "k": "K",
+    }
+
+    rename_map = {}
+
+    for col in df.columns:
+        key = col.strip().casefold().replace(" ", "").replace("_", "")
+
+        if key in aliases:
+            rename_map[col] = aliases[key]
+
+    df = df.rename(columns=rename_map)
+
+    # Weather CSV columns include:
+    # temp_max_c, temp_min_c, rain_mm, precipitation_mm.
+    # Create average temperature only if it doesn't already exist.
+    if (
+        "AvgTemperature" not in df.columns
+        and "temp_max_c" in df.columns
+        and "temp_min_c" in df.columns
+    ):
+        df["AvgTemperature"] = (
+            pd.to_numeric(df["temp_max_c"], errors="coerce")
+            + pd.to_numeric(df["temp_min_c"], errors="coerce")
+        ) / 2
+
+    # Use actual weather measurements when present.
+    # Prefer rain_mm over precipitation_mm if both exist.
+    if "Rainfall" not in df.columns:
+        if "rain_mm" in df.columns:
+            df["Rainfall"] = pd.to_numeric(
+                df["rain_mm"], errors="coerce"
+            )
+        elif "precipitation_mm" in df.columns:
+            df["Rainfall"] = pd.to_numeric(
+                df["precipitation_mm"], errors="coerce"
+            )
+
+    return df
+
+
+# --------------------------------------------------
+# 3. SELECT FEATURES
+# --------------------------------------------------
+
+def select_features(df):
+    """
+    Use available crop, geographic, soil, and weather
+    features. Exclude Year from model inputs because it
+    is used to split the data chronologically.
+    """
+
+    candidate_features = [
+        # Crop and location
+        "Crop",
+        "State",
+        "District",
+        "Season",
+
+        # Weather
+        "Rainfall",
+        "AvgTemperature",
+        "AvgHumidity",
+        "temp_max_c",
+        "temp_min_c",
+        "temp_range_c",
+        "apparent_temp_max_c",
+        "apparent_temp_min_c",
+        "precipitation_mm",
+        "rain_mm",
+        "precipitation_hours",
+        "sunshine_duration_sec",
+        "daylight_duration_sec",
+        "wind_speed_max_kmh",
+        "wind_gusts_max_kmh",
+        "wind_direction_dominant_deg",
+        "solar_radiation_mj_m2",
+        "reference_evapotranspiration_mm",
+
+        # Soil properties
+        "N",
+        "P",
+        "K",
+        "pH",
     ]
-)
+
+    features = [
+        col for col in candidate_features
+        if col in df.columns
+    ]
+
+    if not features:
+        raise ValueError(
+            "No supported input features were found.\n"
+            f"Available columns: {df.columns.tolist()}"
+        )
+
+    # Drop features that have no usable values anywhere.
+    all_missing = [
+        col for col in features
+        if df[col].isna().all()
+    ]
+
+    if all_missing:
+        warnings.warn(
+            "Dropping features that contain only missing values: "
+            + ", ".join(all_missing)
+        )
+
+        features = [
+            col for col in features
+            if col not in all_missing
+        ]
+
+    if not features:
+        raise ValueError(
+            "Every candidate feature is missing. "
+            "Check data/training_data.csv and the merge in preprocess.py."
+        )
+
+    # Remove rows where every selected feature is missing.
+    df = df.dropna(subset=features, how="all").copy()
+
+    # Standardize categorical columns.
+    categorical_features = [
+        col for col in [
+            "Crop",
+            "State",
+            "District",
+            "Season"
+        ]
+        if col in features
+    ]
+
+    for col in categorical_features:
+        df[col] = df[col].astype("string").str.strip()
+        df[col] = df[col].replace("", pd.NA)
+
+    # Convert all remaining features to numeric.
+    numeric_features = [
+        col for col in features
+        if col not in categorical_features
+    ]
+
+    for col in numeric_features:
+        df[col] = pd.to_numeric(
+            df[col], errors="coerce"
+        )
+
+    # Drop any features rendered entirely missing.
+    all_missing_after_conversion = [
+        col for col in features
+        if df[col].isna().all()
+    ]
+
+    if all_missing_after_conversion:
+        warnings.warn(
+            "Dropping unusable features: "
+            + ", ".join(all_missing_after_conversion)
+        )
+
+        features = [
+            col for col in features
+            if col not in all_missing_after_conversion
+        ]
+
+    if not features:
+        raise ValueError("No usable features remain.")
+
+    return df, features
 
 
 # --------------------------------------------------
-# Models
+# 4. CHRONOLOGICAL TRAIN/TEST SPLIT
 # --------------------------------------------------
 
-models = {
+def chronological_split(df):
+    """
+    Train on earlier years and evaluate on the latest years.
 
-    "Linear Regression":
-        LinearRegression(),
+    Uses the last 20% of distinct years for testing,
+    instead of assuming every dataset contains years
+    later than 2019.
+    """
 
-    "Random Forest":
-        RandomForestRegressor(
+    years = sorted(df["Year"].unique())
+
+    if len(years) < 2:
+        raise ValueError(
+            "At least two distinct years are required for "
+            "chronological training and testing. "
+            f"Found years: {years}"
+        )
+
+    test_year_count = max(
+        1,
+        int(np.ceil(len(years) * TEST_FRACTION))
+    )
+
+    test_year_count = min(
+        test_year_count,
+        len(years) - 1
+    )
+
+    test_years = years[-test_year_count:]
+    first_test_year = min(test_years)
+
+    train_df = df[
+        df["Year"] < first_test_year
+    ].copy()
+
+    test_df = df[
+        df["Year"] >= first_test_year
+    ].copy()
+
+    if train_df.empty or test_df.empty:
+        raise ValueError(
+            "Chronological split produced an empty dataset."
+        )
+
+    print("\nChronological split")
+    print("-------------------")
+    print(
+        f"Training years: {train_df['Year'].min()} - "
+        f"{train_df['Year'].max()}"
+    )
+    print(
+        f"Testing years: {test_df['Year'].min()} - "
+        f"{test_df['Year'].max()}"
+    )
+    print("Training rows:", len(train_df))
+    print("Testing rows:", len(test_df))
+
+    return train_df, test_df
+
+
+# --------------------------------------------------
+# 5. BUILD PREPROCESSING PIPELINE
+# --------------------------------------------------
+
+def build_preprocessor(features):
+    categorical_features = [
+        col for col in [
+            "Crop",
+            "State",
+            "District",
+            "Season"
+        ]
+        if col in features
+    ]
+
+    numeric_features = [
+        col for col in features
+        if col not in categorical_features
+    ]
+
+    transformers = []
+
+    if categorical_features:
+        categorical_pipeline = Pipeline([
+            (
+                "imputer",
+                SimpleImputer(strategy="most_frequent")
+            ),
+            (
+                "encoder",
+                OneHotEncoder(handle_unknown="ignore")
+            )
+        ])
+
+        transformers.append(
+            (
+                "categorical",
+                categorical_pipeline,
+                categorical_features
+            )
+        )
+
+    if numeric_features:
+        numeric_pipeline = Pipeline([
+            (
+                "imputer",
+                SimpleImputer(strategy="median")
+            )
+        ])
+
+        transformers.append(
+            (
+                "numeric",
+                numeric_pipeline,
+                numeric_features
+            )
+        )
+
+    return ColumnTransformer(
+        transformers=transformers,
+        remainder="drop"
+    )
+
+
+# --------------------------------------------------
+# 6. DEFINE MODELS
+# --------------------------------------------------
+
+def get_models():
+    models = {
+        "Linear Regression": LinearRegression(),
+
+        "Random Forest": RandomForestRegressor(
             n_estimators=300,
             max_depth=15,
             min_samples_leaf=2,
-            random_state=42,
+            random_state=RANDOM_STATE,
             n_jobs=-1
-        ),
+        )
+    }
 
-    "XGBoost":
-        XGBRegressor(
+    if XGBOOST_AVAILABLE:
+        models["XGBoost"] = XGBRegressor(
             n_estimators=500,
             learning_rate=0.05,
             max_depth=6,
             subsample=0.8,
             colsample_bytree=0.8,
             objective="reg:squarederror",
-            random_state=42
+            random_state=RANDOM_STATE,
+            n_jobs=-1
         )
-}
+    else:
+        print(
+            "\nXGBoost is not installed. "
+            "Training Linear Regression and Random Forest only."
+        )
 
-
-results = {}
-
-trained_models = {}
+    return models
 
 
 # --------------------------------------------------
-# Train
+# 7. TRAIN AND EVALUATE
 # --------------------------------------------------
 
-for name, regressor in models.items():
+def train_models(train_df, test_df, features):
+    X_train = train_df[features]
+    y_train = train_df[TARGET]
 
-    print("\nTraining:", name)
+    X_test = test_df[features]
+    y_test = test_df[TARGET]
 
-    pipeline = Pipeline([
-        (
-            "preprocessor",
-            preprocessor
-        ),
+    preprocessor = build_preprocessor(features)
+    models = get_models()
 
-        (
-            "model",
-            regressor
+    results = []
+    trained_models = {}
+
+    for name, regressor in models.items():
+        print(f"\nTraining {name}...")
+
+        pipeline = Pipeline([
+            ("preprocessor", preprocessor),
+            ("model", regressor)
+        ])
+
+        pipeline.fit(X_train, y_train)
+
+        predictions = pipeline.predict(X_test)
+
+        mae = mean_absolute_error(
+            y_test, predictions
         )
-    ])
 
-    pipeline.fit(
-        X_train,
-        y_train
-    )
-
-    predictions = pipeline.predict(
-        X_test
-    )
-
-    mae = mean_absolute_error(
-        y_test,
-        predictions
-    )
-
-    rmse = np.sqrt(
-        mean_squared_error(
-            y_test,
-            predictions
+        rmse = np.sqrt(
+            mean_squared_error(
+                y_test, predictions
+            )
         )
+
+        # R² is undefined for a test set with fewer than
+        # two observations.
+        if len(y_test) >= 2:
+            r2 = r2_score(y_test, predictions)
+        else:
+            r2 = np.nan
+
+        results.append({
+            "Model": name,
+            "MAE": mae,
+            "RMSE": rmse,
+            "R2": r2
+        })
+
+        trained_models[name] = pipeline
+
+        print(f"MAE:  {mae:.4f}")
+        print(f"RMSE: {rmse:.4f}")
+        print(f"R²:   {r2:.4f}")
+
+    results_df = pd.DataFrame(results)
+    results_df = results_df.sort_values(
+        "RMSE", ascending=True
+    ).reset_index(drop=True)
+
+    print("\nModel comparison")
+    print("----------------")
+    print(results_df.to_string(index=False))
+
+    best_model_name = results_df.iloc[0]["Model"]
+    best_model = trained_models[best_model_name]
+
+    print("\nBest model:", best_model_name)
+
+    return results_df, best_model_name, best_model
+
+
+# --------------------------------------------------
+# 8. SAVE MODEL AND RESULTS
+# --------------------------------------------------
+
+def save_artifacts(results_df, best_model_name, best_model, features):
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
+    comparison_path = os.path.join(
+        MODEL_DIR, "model_comparison.csv"
     )
 
-    r2 = r2_score(
-        y_test,
-        predictions
+    model_path = os.path.join(
+        MODEL_DIR, "best_model.pkl"
     )
 
-    results[name] = {
-        "MAE": mae,
-        "RMSE": rmse,
-        "R2": r2
+    features_path = os.path.join(
+        MODEL_DIR, "features.pkl"
+    )
+
+    metadata_path = os.path.join(
+        MODEL_DIR, "model_metadata.pkl"
+    )
+
+    results_df.to_csv(
+        comparison_path,
+        index=False
+    )
+
+    joblib.dump(
+        best_model,
+        model_path
+    )
+
+    joblib.dump(
+        features,
+        features_path
+    )
+
+    metadata = {
+        "best_model": best_model_name,
+        "features": features,
+        "target": TARGET
     }
 
-    trained_models[name] = pipeline
-
-    print(
-        f"MAE: {mae:.4f}"
+    joblib.dump(
+        metadata,
+        metadata_path
     )
 
-    print(
-        f"RMSE: {rmse:.4f}"
+    print("\nSaved artifacts")
+    print("---------------")
+    print("Best model:", model_path)
+    print("Feature list:", features_path)
+    print("Metadata:", metadata_path)
+    print("Comparison:", comparison_path)
+
+
+# --------------------------------------------------
+# 9. MAIN
+# --------------------------------------------------
+
+def main():
+    print("Loading training dataset...")
+
+    df = load_data(DATA_PATH)
+    df = standardize_features(df)
+
+    df, features = select_features(df)
+
+    print("\nDataset shape:", df.shape)
+    print("Selected features:", features)
+
+    print("\nAvailable year range:")
+    print(df["Year"].min(), "-", df["Year"].max())
+
+    print("\nChecking selected feature coverage:")
+    for col in features:
+        print(
+            f"{col}: "
+            f"{df[col].notna().sum()} non-missing values"
+        )
+
+    train_df, test_df = chronological_split(df)
+
+    results_df, best_model_name, best_model = train_models(
+        train_df,
+        test_df,
+        features
     )
 
-    print(
-        f"R²: {r2:.4f}"
+    save_artifacts(
+        results_df,
+        best_model_name,
+        best_model,
+        features
     )
 
-
-# --------------------------------------------------
-# Results
-# --------------------------------------------------
-
-results_df = pd.DataFrame(
-    results
-).T
-
-print("\nModel comparison:")
-print(results_df)
-
-results_df.to_csv(
-    "models/model_comparison.csv"
-)
+    print("\nTraining completed successfully.")
 
 
-# --------------------------------------------------
-# Find best model
-# --------------------------------------------------
-
-best_model_name = (
-    results_df["RMSE"]
-    .idxmin()
-)
-
-best_model = trained_models[
-    best_model_name
-]
-
-print(
-    "\nBest model:",
-    best_model_name
-)
-
-
-# --------------------------------------------------
-# Save
-# --------------------------------------------------
-
-joblib.dump(
-    best_model,
-    "models/best_model.pkl"
-)
-
-joblib.dump(
-    features,
-    "models/features.pkl"
-)
-
-print(
-    "\nModel saved successfully."
-)
-
+if __name__ == "__main__":
+    main()
