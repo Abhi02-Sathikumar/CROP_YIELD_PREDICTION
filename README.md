@@ -16,7 +16,9 @@ Identify regional crop production patterns across Indian districts.
 Generate daily irrigation advisories based on weather forecasts and crop water requirements.
 Explain yield predictions using SHAP feature importance.
 Visualize agricultural insights through an interactive Streamlit dashboard.
-🎯 Project Objectives
+
+ 🎯 Project Objectives
+ 
 Build a machine learning model to predict crop yield using weather, soil, crop, and seasonal information.
 Compare Linear Regression, Random Forest, and XGBoost regression models.
 Analyze how rainfall, temperature, humidity, and soil nutrients influence crop productivity.
