@@ -1,502 +1,315 @@
-import os
-import pandas as pd
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
 
 
 # --------------------------------------------------
-# 1. CLEAN CROP PRODUCTION DATA
+# 1. PROJECT PATHS
 # --------------------------------------------------
-def clean_crop_data(path):
-    """
-    Clean crop production data.
 
-    Expected columns include:
-        District, State, Crop, Season, Year,
-        Area, Production
-    """
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+PROCESSED_DIR = PROJECT_ROOT / "data" / "processed_data"
+OUTPUT_DIR = PROJECT_ROOT / "data"
+
+CROP_PATH = PROCESSED_DIR / "crop_production_preprocessed.csv"
+WEATHER_PATH = PROCESSED_DIR / "weather_state_year_preprocessed.csv"
+RECOMMENDATION_PATH = (
+    PROCESSED_DIR / "crop_recommendation_preprocessed.csv"
+)
+
+YIELD_OUTPUT_PATH = OUTPUT_DIR / "training_data.csv"
+RECOMMENDATION_OUTPUT_PATH = (
+    OUTPUT_DIR / "crop_recommendation_training_data.csv"
+)
+
+
+# --------------------------------------------------
+# 2. SHARED HELPERS
+# --------------------------------------------------
+
+def require_file(path):
+    """Raise a clear error when a notebook output is missing."""
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Required notebook output not found:\n{path}\n"
+            "Run the relevant preprocessing notebook first."
+        )
+
+
+def normalize_state(series):
+    """Normalize state names for reliable joins."""
+    return (
+        series.astype("string")
+        .str.strip()
+        .str.casefold()
+    )
+
+
+def normalize_crop(series):
+    """Normalize crop labels without changing their meaning."""
+    return (
+        series.astype("string")
+        .str.strip()
+        .str.casefold()
+    )
+
+
+# --------------------------------------------------
+# 3. LOAD NOTEBOOK-PREPROCESSED CROP PRODUCTION DATA
+# --------------------------------------------------
+
+def load_crop_data(path=CROP_PATH):
+    require_file(path)
 
     df = pd.read_csv(path)
-
     df.columns = df.columns.str.strip()
 
-    # Standardize column names
     rename_map = {
-        "District_Name": "District",
-        "district": "District",
         "State_Name": "State",
+        "state_name": "State",
         "state": "State",
+        "District_Name": "District",
+        "district_name": "District",
+        "district": "District",
         "Crop_Year": "Year",
         "crop_year": "Year",
         "year": "Year",
         "crop": "Crop",
         "season": "Season",
         "area": "Area",
-        "production": "Production"
+        "production": "Production",
+        "yield": "Yield",
     }
 
     df = df.rename(columns=rename_map)
 
     required = [
+        "State",
         "District",
         "Crop",
         "Season",
         "Year",
         "Area",
-        "Production"
+        "Production",
     ]
 
-    missing = [
-        col for col in required
-        if col not in df.columns
-    ]
-
+    missing = [col for col in required if col not in df.columns]
     if missing:
         raise ValueError(
-            f"Missing crop columns: {missing}\n"
-            f"Available columns: {list(df.columns)}"
+            f"Crop production file is missing {missing}. "
+            f"Available columns: {df.columns.tolist()}"
         )
 
-    # Standardize text columns
-    for col in ["District", "Crop", "Season"]:
+    for col in ["State", "District", "Crop", "Season"]:
         df[col] = df[col].astype("string").str.strip()
 
-    if "State" in df.columns:
-        df["State"] = df["State"].astype("string").str.strip()
+    for col in ["Year", "Area", "Production"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Convert numeric columns
-    for col in ["Area", "Production", "Year"]:
-        df[col] = pd.to_numeric(
-            df[col], errors="coerce"
-        )
+    df = df.dropna(subset=required).copy()
 
-    # Remove invalid records
-    df = df.dropna(
-        subset=[
-            "District",
-            "Crop",
-            "Season",
-            "Year",
-            "Area",
-            "Production"
-        ]
-    ).copy()
+    # Crop_Year should represent an actual calendar year.
+    df = df[df["Year"] % 1 == 0].copy()
+    df["Year"] = df["Year"].astype(int)
 
-    # Keep valid years and production values
-    df["Year"] = df["Year"].round().astype(int)
-    df = df[df["Area"] > 0]
-    df = df[df["Production"] >= 0]
+    df = df[
+        (df["Area"] > 0) &
+        (df["Production"] >= 0)
+    ].copy()
 
-    # Calculate crop yield
+    # Recalculate the target consistently.
+    # This is production per unit of cultivated area.
     df["Yield"] = df["Production"] / df["Area"]
 
-    # Remove infinite and invalid yield values
     df = df.replace([np.inf, -np.inf], np.nan)
-    df = df.dropna(subset=["Yield"])
+    df = df.dropna(subset=["Yield"]).copy()
 
+    df["State"] = normalize_state(df["State"])
+
+    print("Crop production data:", df.shape)
     return df
 
 
 # --------------------------------------------------
-# 2. CLEAN SOIL DATA
+# 4. LOAD NOTEBOOK-PREPROCESSED WEATHER DATA
 # --------------------------------------------------
-def clean_soil_data(path):
-    """
-    Load and clean soil/crop recommendation data.
-    """
 
-    import csv
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(
-            f"Soil dataset not found: {path}"
-        )
-
-    try:
-        df = pd.read_csv(
-            path,
-            encoding="utf-8-sig"
-        )
-
-    except pd.errors.ParserError as exc:
-        print(f"\nError reading soil CSV: {path}")
-        print("Checking the file's delimiter and rows...")
-
-        try:
-            df = pd.read_csv(
-                path,
-                sep=None,
-                engine="python",
-                encoding="utf-8-sig",
-                on_bad_lines="error"
-            )
-        except Exception as retry_exc:
-            raise ValueError(
-                f"Could not parse soil dataset: {path}\n"
-                "Check line 20 and the surrounding rows for "
-                "inconsistent commas, extra fields, or malformed "
-                "quoting. The file may not be a valid CSV.\n"
-                f"Original error: {exc}\n"
-                f"Retry error: {retry_exc}"
-            ) from retry_exc
-
-    df.columns = (
-        df.columns
-        .str.strip()
-        .str.lower()
-    )
-
-    rename_map = {
-        "nitrogen": "N",
-        "n": "N",
-        "phosphorous": "P",
-        "phosphorus": "P",
-        "p": "P",
-        "potassium": "K",
-        "k": "K",
-        "temperature": "soil_temperature",
-        "humidity": "soil_humidity",
-        "ph": "pH",
-        "rainfall": "soil_rainfall",
-        "label": "Crop",
-        "crop": "Crop"
-    }
-
-    df = df.rename(columns=rename_map)
-
-    if "Crop" in df.columns:
-        df["Crop"] = (
-            df["Crop"]
-            .astype("string")
-            .str.strip()
-        )
-
-    numeric_columns = [
-        "N",
-        "P",
-        "K",
-        "pH",
-        "soil_temperature",
-        "soil_humidity",
-        "soil_rainfall"
-    ]
-
-    for col in numeric_columns:
-        if col in df.columns:
-            df[col] = pd.to_numeric(
-                df[col],
-                errors="coerce"
-            )
-
-    print("Soil dataset loaded:", df.shape)
-    print("Soil columns:", df.columns.tolist())
-
-    return df
-
-# --------------------------------------------------
-# 3. CLEAN PREPROCESSED WEATHER DATA
-# --------------------------------------------------
-def clean_weather_data(path):
-    """
-    Process state-level weather_preprocessed.csv.
-
-    Expected source columns include:
-        state, year, temp_max_c, temp_min_c,
-        precipitation_mm, rain_mm, etc.
-
-    Weather data is state-level, not district-level.
-    """
+def load_weather_data(path=WEATHER_PATH):
+    require_file(path)
 
     df = pd.read_csv(path)
+    df.columns = df.columns.str.strip()
 
-    # Normalize column names
-    df.columns = (
-        df.columns
-        .str.strip()
-        .str.lower()
-    )
-
-    # Rename geographic and year columns
-    df = df.rename(
-        columns={
-            "state": "State",
-            "year": "Year"
-        }
-    )
+    rename_map = {
+        "state": "State",
+        "year": "Year",
+    }
+    df = df.rename(columns=rename_map)
 
     required = ["State", "Year"]
-
-    missing = [
-        col for col in required
-        if col not in df.columns
-    ]
+    missing = [col for col in required if col not in df.columns]
 
     if missing:
         raise ValueError(
-            f"Missing weather columns: {missing}\n"
-            f"Available columns: {list(df.columns)}"
+            f"Weather file is missing {missing}. "
+            "Export weather aggregated by both state and year."
         )
 
-    # Standardize state names
-    df["State"] = (
-        df["State"]
-        .astype("string")
-        .str.strip()
-    )
+    df["State"] = df["State"].astype("string").str.strip()
+    df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
 
-    # Convert year to numeric
-    df["Year"] = pd.to_numeric(
-        df["Year"], errors="coerce"
-    )
+    df = df.dropna(subset=["State", "Year"]).copy()
 
-    df = df.dropna(
-        subset=["State", "Year"]
-    ).copy()
+    # Do not round averaged years. Reject non-integer year keys.
+    df = df[df["Year"] % 1 == 0].copy()
+    df["Year"] = df["Year"].astype(int)
 
-    # IMPORTANT:
-    # This rounds decimal years to the nearest integer.
-    # Confirm the meaning of decimal years in the source
-    # before relying on this for a production model.
-    df["Year"] = df["Year"].round().astype(int)
+    df["State"] = normalize_state(df["State"])
 
-    # Convert all weather measurements to numeric
     weather_columns = [
         col for col in df.columns
         if col not in ["State", "Year"]
     ]
 
+    if not weather_columns:
+        raise ValueError("Weather file has no usable weather features.")
+
     for col in weather_columns:
-        df[col] = pd.to_numeric(
-            df[col], errors="coerce"
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # One weather row per state-year is essential for a safe merge.
+    if df.duplicated(["State", "Year"]).any():
+        duplicates = df.loc[
+            df.duplicated(["State", "Year"], keep=False),
+            ["State", "Year"]
+        ].drop_duplicates()
+
+        raise ValueError(
+            "Weather data has duplicate state-year keys. "
+            "Fix the aggregation in Weather_data.ipynb first.\n"
+            f"Examples:\n{duplicates.head()}"
         )
 
-    # Aggregate duplicate state-year observations
-    # to ensure one weather row per merge key
-    df = (
-        df.groupby(
-            ["State", "Year"],
-            as_index=False
-        )[weather_columns]
-        .mean()
-    )
-
+    print("Weather data:", df.shape)
     return df
 
 
 # --------------------------------------------------
-# 4. MERGE CROP, WEATHER AND SOIL DATA
+# 5. PREPARE SEPARATE CROP RECOMMENDATION DATA
 # --------------------------------------------------
-def merge_datasets(crop_df, weather_df, soil_df):
-    """
-    Merge:
-        Crop + weather using State and Year
-        Crop + soil using Crop
 
-    State-level weather will be shared by districts
-    belonging to the same state and year.
-    """
+def load_recommendation_data(path=RECOMMENDATION_PATH):
+    require_file(path)
 
-    crop_df = crop_df.copy()
-    weather_df = weather_df.copy()
-    soil_df = soil_df.copy()
+    df = pd.read_csv(path)
+    df.columns = df.columns.str.strip().str.lower()
 
-    # Normalize state names for matching
-    if (
-        "State" in crop_df.columns
-        and "State" in weather_df.columns
-    ):
-        crop_df["State"] = (
-            crop_df["State"]
-            .astype("string")
-            .str.strip()
-            .str.casefold()
-        )
+    rename_map = {
+        "ph": "pH",
+        "label": "Crop",
+    }
+    df = df.rename(columns=rename_map)
 
-        weather_df["State"] = (
-            weather_df["State"]
-            .astype("string")
-            .str.strip()
-            .str.casefold()
-        )
+    features = [
+        "N", "P", "K", "temperature",
+        "humidity", "pH", "rainfall"
+    ]
 
-        # Merge using state and year
-        merged = crop_df.merge(
-            weather_df,
-            on=["State", "Year"],
-            how="left",
-            validate="many_to_one"
-        )
-
-    elif "District" in weather_df.columns:
-        # Fallback for a district-level weather dataset
-        merged = crop_df.merge(
-            weather_df,
-            on=["District", "Year"],
-            how="left",
-            validate="many_to_one"
-        )
-
-    else:
+    missing = [col for col in features + ["Crop"] if col not in df.columns]
+    if missing:
         raise ValueError(
-            "Cannot merge crop and weather data. "
-            "The crop dataset needs State and Year "
-            "to match the state-level weather dataset."
+            f"Recommendation file is missing {missing}. "
+            f"Available columns: {df.columns.tolist()}"
         )
 
-    # Merge soil data by crop, if available
-    if "Crop" in soil_df.columns:
+    for col in features:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
 
-        soil_columns = [
-            col for col in [
-                "Crop",
-                "N",
-                "P",
-                "K",
-                "pH"
-            ]
-            if col in soil_df.columns
-        ]
+    df["Crop"] = df["Crop"].astype("string").str.strip()
+    df = df.dropna(subset=features + ["Crop"]).copy()
 
-        if len(soil_columns) > 1:
-            soil_small = soil_df[soil_columns].copy()
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(subset=features + ["Crop"])
 
-            # Normalize crop labels for matching
-            soil_small["Crop"] = (
-                soil_small["Crop"]
-                .astype("string")
-                .str.strip()
-                .str.casefold()
-            )
+    print("Crop recommendation data:", df.shape)
+    return df
 
-            merged["Crop"] = (
-                merged["Crop"]
-                .astype("string")
-                .str.strip()
-                .str.casefold()
-            )
 
-            # Average soil properties by crop
-            soil_small = (
-                soil_small
-                .groupby("Crop", as_index=False)
-                .mean(numeric_only=True)
-            )
+# --------------------------------------------------
+# 6. MERGE PRODUCTION AND WEATHER
+# --------------------------------------------------
 
-            merged = merged.merge(
-                soil_small,
-                on="Crop",
-                how="left",
-                validate="many_to_one"
-            )
+def merge_yield_data(crop_df, weather_df):
+    merged = crop_df.merge(
+        weather_df,
+        on=["State", "Year"],
+        how="left",
+        validate="many_to_one",
+        indicator=True,
+    )
+
+    unmatched = int((merged["_merge"] == "left_only").sum())
+    total = len(merged)
+
+    print(f"Production records: {total}")
+    print(f"Records with no matching weather: {unmatched}")
+
+    merged = merged.drop(columns=["_merge"])
+
+    # Do not silently fill missing weather with zero.
+    weather_columns = [
+        col for col in weather_df.columns
+        if col not in ["State", "Year"]
+    ]
+
+    if weather_columns:
+        print("\nWeather missing-value percentages:")
+        print(
+            (merged[weather_columns].isna().mean() * 100)
+            .round(2)
+            .astype(str)
+            .add("%")
+        )
 
     return merged
 
 
 # --------------------------------------------------
-# 5. MAIN EXECUTION
+# 7. MAIN
 # --------------------------------------------------
-if __name__ == "__main__":
 
-    # Project root is the current working directory.
-    # Run this script from the repository root.
+def main():
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    crop_path = "data/raw/crop_production.csv"
+    print("Loading notebook-preprocessed datasets...")
 
-    soil_path = "data/raw/crop_recommendation.csv"
+    crop_df = load_crop_data()
+    weather_df = load_weather_data()
+    recommendation_df = load_recommendation_data()
 
-    # UPDATED: Read the preprocessed weather CSV
-    weather_path = (
-        "data/processed_data/weather_preprocessed.csv"
-    )
+    print("\nMerging crop production with yearly weather...")
+    yield_df = merge_yield_data(crop_df, weather_df)
 
-    output_path = "data/training_data.csv"
-
-    # Verify input files exist
-    for path in [
-        crop_path,
-        soil_path,
-        weather_path
-    ]:
-        if not os.path.exists(path):
-            raise FileNotFoundError(
-                f"Input file not found: {path}\n"
-                "Run this script from the project root "
-                "and verify the file path."
-            )
-
-    print("Loading and cleaning crop data...")
-    crop = clean_crop_data(crop_path)
-
-    print("Loading and cleaning soil data...")
-    soil = clean_soil_data(soil_path)
-
-    print("Loading preprocessed weather data...")
-    weather = clean_weather_data(weather_path)
-
-    print("\nCrop data shape:", crop.shape)
-    print("Soil data shape:", soil.shape)
-    print("Weather data shape:", weather.shape)
-
-    print("\nWeather columns:")
-    print(weather.columns.tolist())
-
-    print("\nMerging datasets...")
-    final = merge_datasets(
-        crop,
-        weather,
-        soil
-    )
-
-    # Create output directory if needed
-    os.makedirs(
-        os.path.dirname(output_path),
-        exist_ok=True
-    )
-
-    # Save final training dataset
-    final.to_csv(
-        output_path,
+    # Keep both model datasets separate.
+    yield_df.to_csv(YIELD_OUTPUT_PATH, index=False)
+    recommendation_df.to_csv(
+        RECOMMENDATION_OUTPUT_PATH,
         index=False
     )
 
-    print("\nPreprocessing completed successfully.")
-    print("Output saved to:", output_path)
+    print("\nPreprocessing completed.")
+    print("Yield training data:", YIELD_OUTPUT_PATH)
+    print("Yield dataset shape:", yield_df.shape)
+    print("Yield columns:", yield_df.columns.tolist())
 
-    print("\nFinal dataset preview:")
-    print(final.head())
+    print(
+        "\nCrop recommendation training data:",
+        RECOMMENDATION_OUTPUT_PATH
+    )
+    print("Recommendation dataset shape:", recommendation_df.shape)
 
-    print("\nFinal dataset shape:")
-    print(final.shape)
 
-    print("\nFinal columns:")
-    print(final.columns.tolist())
-
-    # Report weather missing-value percentages
-    weather_columns = [
-        col for col in weather.columns
-        if col not in ["State", "Year"]
-    ]
-
-    print("\nWeather missing-value percentages:")
-    if weather_columns:
-        print(
-            (
-                final[weather_columns]
-                .isna()
-                .mean()
-                .mul(100)
-                .round(2)
-                .astype(str)
-                + "%"
-            )
-        )
-
-    # Report the number of rows without matched weather
-    if weather_columns:
-        unmatched = final[weather_columns].isna().all(axis=1).sum()
-
-        print(
-            "\nRows with no matched weather data:",
-            unmatched,
-            "out of",
-            len(final)
-        )
+if __name__ == "__main__":
+    main()
