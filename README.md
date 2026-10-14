@@ -1,4 +1,4 @@
-🌾 Crop Yield Prediction & Smart Irrigation Advisory
+**🌾 Crop Yield Prediction & Smart Irrigation Advisory**
 
 An AI-powered agricultural intelligence system that predicts crop yield and provides smart irrigation recommendations using weather, soil, and historical crop production data.
 
