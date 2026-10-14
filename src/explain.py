@@ -1,165 +1,115 @@
-"""Explain crop yield predictions with SHAP."""
-
-from pathlib import Path
+﻿from pathlib import Path
 
 import joblib
 import numpy as np
 import pandas as pd
+import shap
+import matplotlib
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-MODEL_DIR = PROJECT_ROOT / "models"
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from scipy import sparse
 
+ROOT = Path(__file__).resolve().parent.parent
 
-def load_artifacts(model_dir=MODEL_DIR):
-    model_dir = Path(model_dir)
-    model_path = model_dir / "best_model.pkl"
-    features_path = model_dir / "features.pkl"
+DATA_PATH = ROOT / "data" / "processed_data" / "crop_production_preprocessed.csv"
+MODEL_PATH = ROOT / "models" / "xgboost.joblib"
+OUTPUT_DIR = ROOT / "outputs" / "shap"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    if not model_path.exists() or not features_path.exists():
-        raise FileNotFoundError(
-            "Trained artifacts not found. Run src/train.py first."
-        )
+print("Loading dataset and trained XGBoost model...")
 
-    return joblib.load(model_path), joblib.load(features_path)
+df = pd.read_csv(DATA_PATH)
+df = df.rename(columns={
+    "State_Name": "State",
+    "District_Name": "District",
+    "Crop_Year": "Year"
+})
 
+features = ["State", "District", "Year", "Season", "Crop", "Area"]
 
-def explain_yield(
-    input_data,
-    background_data,
-    model=None,
-    features=None,
-    max_background_rows=100,
-):
-    """
-    Return SHAP contributions for one yield prediction.
+for col in ["Year", "Area", "Production", "Yield"]:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    input_data: one-row DataFrame, Series, or dictionary.
-    background_data: processed training DataFrame with the original
-                     feature columns used by the model.
+df = df.replace([np.inf, -np.inf], np.nan)
+df = df.dropna(
+    subset=features + ["Production", "Yield"]
+).copy()
 
-    Positive SHAP values push the prediction higher; negative values
-    push it lower relative to the SHAP baseline.
-    """
-    try:
-        import shap
-    except ImportError as exc:
-        raise ImportError(
-            "Install SHAP first with: pip install shap"
-        ) from exc
+df = df[
+    (df["Area"] > 0)
+    & (df["Production"] >= 0)
+    & (df["Yield"] >= 0)
+]
 
-    if model is None or features is None:
-        model, features = load_artifacts()
+# Use a sample to make SHAP analysis faster.
+sample_size = min(300, len(df))
+sample = df.sample(n=sample_size, random_state=42)
 
-    if isinstance(input_data, dict):
-        row = pd.DataFrame([input_data])
-    elif isinstance(input_data, pd.Series):
-        row = input_data.to_frame().T
-    elif isinstance(input_data, pd.DataFrame) and len(input_data) == 1:
-        row = input_data.copy()
-    else:
-        raise ValueError("input_data must contain exactly one row.")
+X_sample = sample[features]
 
-    row.columns = row.columns.astype(str).str.strip()
-    background_data = background_data.copy()
-    background_data.columns = (
-        background_data.columns.astype(str).str.strip()
-    )
+pipeline = joblib.load(MODEL_PATH)
+preprocessor = pipeline.named_steps["preprocessor"]
+model = pipeline.named_steps["model"]
 
-    # The training pipeline expects the same raw input columns and order.
-    row = row.reindex(columns=features)
-    background = background_data.reindex(columns=features)
+X_transformed = preprocessor.transform(X_sample)
 
-    background = background.replace([np.inf, -np.inf], np.nan)
-    row = row.replace([np.inf, -np.inf], np.nan)
+# SHAP works with a dense array for this explanation workflow.
+if sparse.issparse(X_transformed):
+    X_transformed = X_transformed.toarray()
 
-    background = background.dropna(how="all")
-    if background.empty:
-        raise ValueError(
-            "background_data has no usable rows for SHAP."
-        )
+feature_names = preprocessor.get_feature_names_out()
 
-    if len(background) > max_background_rows:
-        background = background.sample(
-            n=max_background_rows, random_state=42
-        )
+print("Calculating SHAP values for", sample_size, "records...")
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(X_transformed)
 
-    # Apply the fitted transformations; do not refit the encoder/imputer.
-    preprocessor = model.named_steps["preprocessor"]
-    estimator = model.named_steps["model"]
+# Save a SHAP summary plot.
+shap.summary_plot(
+    shap_values,
+    X_transformed,
+    feature_names=feature_names,
+    max_display=20,
+    show=False
+)
+plt.tight_layout()
+plt.savefig(
+    OUTPUT_DIR / "shap_summary.png",
+    dpi=200,
+    bbox_inches="tight"
+)
+plt.close()
 
-    transformed_background = preprocessor.transform(background)
-    transformed_row = preprocessor.transform(row)
+# Save a global feature-importance bar chart.
+shap.summary_plot(
+    shap_values,
+    X_transformed,
+    feature_names=feature_names,
+    plot_type="bar",
+    max_display=20,
+    show=False
+)
+plt.tight_layout()
+plt.savefig(
+    OUTPUT_DIR / "shap_feature_importance.png",
+    dpi=200,
+    bbox_inches="tight"
+)
+plt.close()
 
-    if hasattr(transformed_background, "toarray"):
-        transformed_background = transformed_background.toarray()
-    if hasattr(transformed_row, "toarray"):
-        transformed_row = transformed_row.toarray()
+# Save a CSV ranking features by mean absolute SHAP value.
+importance = pd.DataFrame({
+    "Feature": feature_names,
+    "Mean_Absolute_SHAP": np.abs(shap_values).mean(axis=0)
+}).sort_values("Mean_Absolute_SHAP", ascending=False)
 
-    try:
-        transformed_names = preprocessor.get_feature_names_out()
-    except (AttributeError, ValueError):
-        transformed_names = [
-            f"feature_{i}" for i in range(transformed_row.shape[1])
-        ]
+importance.to_csv(
+    OUTPUT_DIR / "shap_feature_importance.csv",
+    index=False
+)
 
-    # A model-agnostic explainer supports more estimator types.
-    # A small background sample limits computation time.
-    explainer = shap.Explainer(
-        estimator,
-        transformed_background,
-        feature_names=list(transformed_names),
-    )
-    explanation = explainer(transformed_row)
+print("\nTop 15 influential features:")
+print(importance.head(15).to_string(index=False))
 
-    shap_values = np.asarray(explanation.values)
-    if shap_values.ndim == 2:
-        contributions = shap_values[0]
-    elif shap_values.ndim == 3:
-        contributions = shap_values[0, :, 0]
-    else:
-        raise ValueError(
-            f"Unexpected SHAP output shape: {shap_values.shape}"
-        )
-
-    base_values = np.asarray(explanation.base_values).reshape(-1)
-    baseline = float(base_values[0])
-    prediction = float(np.asarray(model.predict(row)).reshape(-1)[0])
-
-    result = pd.DataFrame({
-        "feature": list(transformed_names),
-        "feature_value": transformed_row[0],
-        "shap_value": contributions,
-    })
-
-    result["direction"] = np.where(
-        result["shap_value"] > 0,
-        "increases prediction",
-        np.where(
-            result["shap_value"] < 0,
-            "decreases prediction",
-            "no contribution",
-        ),
-    )
-
-    result["absolute_impact"] = result["shap_value"].abs()
-    result = result.sort_values(
-        "absolute_impact", ascending=False
-    ).reset_index(drop=True)
-
-    return {
-        "predicted_yield": round(prediction, 4),
-        "baseline_yield": round(baseline, 4),
-        "explanations": result,
-        "note": (
-            "SHAP values are relative to the background sample. "
-            "They explain model behaviour, not causal effects."
-        ),
-    }
-
-
-if __name__ == "__main__":
-    print(
-        "Import explain_yield() from a notebook and pass a "
-        "one-row input DataFrame plus a representative training "
-        "DataFrame as background_data."
-    )
+print("\nSHAP analysis completed.")
+print("Results saved in:", OUTPUT_DIR)

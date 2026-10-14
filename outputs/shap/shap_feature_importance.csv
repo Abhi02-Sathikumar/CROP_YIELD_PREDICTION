@@ -1,0 +1,812 @@
+Feature,Mean_Absolute_SHAP
+numeric__Year,7208.7827
+categorical__Crop_Coconut,5972.4756
+categorical__District_FAZILKA,4554.28
+categorical__District_PATHANKOT,2727.076
+categorical__State_Karnataka,1383.5922
+numeric__Area,777.5041
+categorical__State_Andhra Pradesh,588.8024
+categorical__Crop_Sugarcane,573.09955
+categorical__District_GOLAGHAT,527.30994
+categorical__Season_Kharif,449.72452
+categorical__State_Punjab,406.31613
+categorical__Season_Whole Year,353.22845
+categorical__District_CACHAR,326.01678
+categorical__District_KARIMGANJ,317.14746
+categorical__District_PONDICHERRY,261.69345
+categorical__District_KARAIKAL,242.79985
+categorical__District_DIBRUGARH,235.43375
+categorical__District_CHITTOOR,227.40887
+categorical__State_West Bengal,221.42018
+categorical__District_KAMRUP,210.32896
+categorical__District_NAGAON,192.54248
+categorical__State_Tamil Nadu,190.91446
+categorical__District_KAMRUP METRO,189.14851
+categorical__District_KRISHNAGIRI,176.73245
+categorical__State_Puducherry,175.75613
+categorical__District_SONITPUR,175.28398
+categorical__District_24 PARAGANAS NORTH,151.039
+categorical__District_LAKHIMPUR,146.02263
+categorical__District_VIZIANAGARAM,137.87775
+categorical__District_WEST GODAVARI,137.8156
+categorical__District_ANANTAPUR,136.513
+categorical__District_KARBI ANGLONG,135.01617
+categorical__District_UDALGURI,133.27979
+categorical__District_NALBARI,127.40725
+categorical__District_GURDASPUR,109.7388
+categorical__District_TINSUKIA,106.8783
+categorical__District_DHUBRI,105.948685
+categorical__District_TARN TARAN,105.35608
+categorical__District_JORHAT,103.6174
+categorical__State_Goa,98.19689
+categorical__District_KADAPA,94.22771
+categorical__District_JALPAIGURI,90.75861
+categorical__State_Andaman and Nicobar Islands,78.39029
+categorical__District_DHEMAJI,77.395294
+categorical__District_KURNOOL,76.79734
+categorical__District_CUDDALORE,76.444046
+categorical__State_Telangana,73.56865
+categorical__District_GOALPARA,71.185455
+categorical__District_DIMA HASAO,70.74195
+categorical__District_MAHE,69.030846
+categorical__District_TIRUVANNAMALAI,64.06421
+categorical__District_MEDINIPUR WEST,59.200912
+categorical__District_ERODE,58.907234
+categorical__District_THIRUVANANTHAPURAM,58.83992
+categorical__District_HAILAKANDI,58.30992
+categorical__District_SIVASAGAR,53.50095
+categorical__District_PATHANAMTHITTA,53.416897
+categorical__District_MUMBAI,53.377277
+categorical__District_YANAM,49.437828
+categorical__District_THENI,47.748596
+categorical__District_TIRUPPUR,41.218895
+categorical__District_DARRANG,38.973907
+categorical__District_THRISSUR,37.87511
+categorical__District_KRISHNA,37.76373
+categorical__District_MALDAH,35.189774
+categorical__District_PRAKASAM,33.44924
+categorical__District_GUNTUR,30.482214
+categorical__District_ERNAKULAM,30.367262
+categorical__District_THANJAVUR,30.298578
+categorical__District_KOKRAJHAR,30.219124
+categorical__District_PUDUKKOTTAI,29.884365
+categorical__District_SANGRUR,28.878626
+categorical__District_SOUTH GOA,27.824514
+categorical__District_KASARAGOD,26.61727
+categorical__District_MALAPPURAM,25.201372
+categorical__State_Assam,23.982018
+categorical__District_LUDHIANA,22.564968
+categorical__State_Kerala,22.21948
+categorical__District_DINAJPUR DAKSHIN,21.492575
+categorical__District_WAYANAD,20.57245
+categorical__District_SALEM,20.303307
+categorical__District_SPSR NELLORE,20.271528
+categorical__District_SRIKAKULAM,20.2192
+categorical__District_EAST GODAVARI,19.863014
+categorical__District_BAKSA,19.493694
+categorical__District_VISAKHAPATANAM,19.337078
+categorical__District_IDUKKI,19.277824
+categorical__District_RAMANATHAPURAM,17.872131
+categorical__District_S.A.S NAGAR,17.553623
+categorical__District_KOZHIKODE,17.089388
+categorical__District_THIRUVARUR,17.084562
+categorical__District_PERAMBALUR,16.527977
+categorical__District_HASSAN,16.131702
+categorical__District_KARNAL,15.686171
+categorical__Season_Autumn,15.433324
+categorical__Crop_Onion,15.287623
+categorical__District_BARPETA,14.362503
+categorical__District_NORTH GOA,14.054978
+categorical__District_MADURAI,13.907908
+categorical__District_TUTICORIN,13.28236
+categorical__District_KANNIYAKUMARI,12.651047
+categorical__District_KAPURTHALA,11.094453
+categorical__State_Mizoram,10.850012
+categorical__District_NALGONDA,10.603225
+categorical__District_PURULIA,10.478237
+categorical__Crop_Guar seed,10.415716
+categorical__District_THE NILGIRIS,10.075209
+categorical__District_TIRUNELVELI,10.069958
+categorical__District_CHIRANG,8.849144
+categorical__Crop_Cashewnut,8.6723385
+categorical__District_COIMBATORE,8.229663
+categorical__District_HOOGHLY,7.978763
+categorical__District_NADIA,7.9036465
+categorical__District_NAMAKKAL,7.893151
+categorical__District_RUPNAGAR,7.818282
+categorical__District_FATEHGARH SAHIB,7.583776
+categorical__District_MARIGAON,7.4729867
+categorical__District_NAGAPATTINAM,7.470399
+categorical__Crop_Rubber,7.46514
+categorical__Crop_Peas & beans (Pulses),7.4166017
+categorical__District_KHAMMAM,7.374428
+categorical__Crop_Papaya,7.1590104
+categorical__District_KOTTAYAM,7.1585865
+categorical__District_24 PARAGANAS SOUTH,7.148405
+categorical__District_FARIDKOT,6.9607253
+categorical__District_JALANDHAR,6.9337516
+categorical__District_ARIYALUR,6.6940517
+categorical__State_Maharashtra,6.646268
+categorical__Crop_Orange,6.439388
+categorical__District_NAWANSHAHR,6.283821
+categorical__District_KANCHIPURAM,5.956992
+categorical__District_COOCHBEHAR,5.4994335
+categorical__District_HOSHIARPUR,5.260664
+categorical__District_AMRITSAR,5.210854
+categorical__Crop_Coriander,4.923656
+categorical__District_BARNALA,4.841944
+categorical__District_KANNUR,4.2576113
+categorical__District_DHARMAPURI,4.1132355
+categorical__District_DINAJPUR UTTAR,3.8315384
+categorical__District_HOWRAH,3.437781
+categorical__District_MOGA,3.3786838
+categorical__Crop_Dry chillies,3.3120205
+categorical__District_MAYURBHANJ,3.2100937
+categorical__District_KOLLAM,3.0791273
+categorical__Crop_Banana,2.8401012
+categorical__Crop_Grapes,2.8272772
+categorical__District_PUNE,2.6229177
+categorical__District_BIRBHUM,2.5643282
+categorical__Crop_Paddy,2.5525901
+categorical__District_NASHIK,2.3198152
+categorical__District_NICOBARS,2.2889261
+categorical__District_PALAKKAD,2.0662026
+categorical__Crop_Tapioca,2.0273967
+categorical__Crop_Cabbage,1.8835584
+categorical__District_KARUR,1.858454
+categorical__Crop_Other  Rabi pulses,1.731319
+categorical__Crop_Pineapple,1.58115
+categorical__District_LUNGLEI,1.5433978
+categorical__Crop_Mango,1.4687818
+categorical__District_JALGAON,1.3309801
+categorical__Crop_Potato,1.3174758
+categorical__District_TUMKUR,1.3154365
+categorical__Crop_Turmeric,1.2994026
+categorical__Crop_Jute,1.2549773
+categorical__State_Chhattisgarh,1.1593325
+categorical__District_MURSHIDABAD,1.1477876
+categorical__District_ALAPPUZHA,1.1274009
+categorical__Crop_Dry ginger,1.1242224
+categorical__District_BIDAR,1.1100336
+categorical__Season_Rabi,1.0243083
+categorical__State_Dadra and Nagar Haveli,0.9982493
+categorical__State_Gujarat,0.9578734
+categorical__Crop_Cardamom,0.9247546
+categorical__District_AHMEDNAGAR,0.8843489
+categorical__Crop_Ginger,0.798312
+categorical__District_OSMANABAD,0.7878591
+categorical__Crop_Rice,0.7757201
+categorical__Crop_Black pepper,0.7711093
+categorical__Season_Summer,0.7581293
+categorical__Crop_Groundnut,0.7383785
+categorical__District_SOUTH ANDAMANS,0.7116636
+categorical__Crop_Moong(Green Gram),0.7063626
+categorical__State_Madhya Pradesh,0.6324457
+categorical__Crop_Linseed,0.61473566
+categorical__Crop_Sesamum,0.5858659
+categorical__Season_Winter,0.5724558
+categorical__Crop_Mesta,0.55562705
+categorical__State_Meghalaya,0.5517111
+categorical__Crop_Arecanut,0.5499543
+categorical__Crop_Tomato,0.5482588
+categorical__Crop_Maize,0.53238356
+categorical__Crop_Sweet potato,0.53223294
+categorical__District_NORTH AND MIDDLE ANDAMAN,0.5307338
+categorical__Crop_Small millets,0.4797965
+categorical__Crop_Tobacco,0.46646342
+categorical__District_THIRUVALLUR,0.46137747
+categorical__District_BONGAIGAON,0.44406798
+categorical__Crop_Pome Fruit,0.43746522
+categorical__Crop_Arhar/Tur,0.41317773
+categorical__District_DADRA AND NAGAR HAVELI,0.41280288
+categorical__District_BIJAPUR,0.39960825
+categorical__Crop_Niger seed,0.36313024
+categorical__Crop_Urad,0.3573507
+categorical__District_RANGAREDDI,0.2911877
+categorical__State_Arunachal Pradesh,0.27947888
+categorical__District_BELGAUM,0.2643202
+categorical__Crop_Brinjal,0.24335124
+categorical__State_Himachal Pradesh,0.23607859
+categorical__District_MEDAK,0.22623734
+categorical__State_Haryana,0.21158996
+categorical__District_SIVAGANGA,0.20112546
+categorical__Crop_Ragi,0.17548837
+categorical__District_DHULE,0.17003608
+categorical__Crop_Castor seed,0.16842148
+categorical__Crop_Blackgram,0.16652577
+categorical__Crop_other oilseeds,0.16005687
+categorical__District_TIRUCHIRAPPALLI,0.15874638
+categorical__Crop_Drum Stick,0.15429495
+categorical__District_PANIPAT,0.1444835
+categorical__State_Uttar Pradesh,0.136196
+categorical__Crop_Barley,0.12199828
+categorical__District_DINDIGUL,0.1203908
+categorical__Crop_Garlic,0.1178588
+categorical__District_VELLORE,0.11604003
+categorical__District_KOPPAL,0.11269359
+categorical__District_YADGIR,0.109595895
+categorical__Crop_Gram,0.107471265
+categorical__State_Bihar,0.103064224
+categorical__Crop_Masoor,0.10279278
+categorical__State_Rajasthan,0.09907994
+categorical__State_Nagaland,0.09234296
+categorical__Crop_Pulses total,0.08529367
+categorical__District_KATNI,0.083977155
+categorical__District_DANG,0.079386756
+categorical__District_RATLAM,0.075664945
+categorical__Crop_Other Vegetables,0.07559549
+categorical__District_DHARWAD,0.0739411
+categorical__District_KOLASIB,0.06274774
+categorical__District_CHHINDWARA,0.05899686
+categorical__District_MANDYA,0.058759894
+categorical__District_BARDHAMAN,0.05425303
+categorical__District_NIZAMABAD,0.052234378
+categorical__District_BUXAR,0.051613204
+categorical__District_VADODARA,0.048489444
+categorical__Crop_Wheat,0.04802214
+categorical__District_EAST SIANG,0.04646267
+categorical__District_NARMADA,0.04467501
+categorical__District_GULBARGA,0.043367516
+categorical__Crop_Jack Fruit,0.038217645
+categorical__District_RAICHUR,0.03725972
+categorical__District_SABAR KANTHA,0.036536664
+categorical__District_JUNAGADH,0.033320148
+categorical__District_SINGRAULI,0.033309024
+categorical__Crop_Jowar,0.03317767
+categorical__Crop_Horse-gram,0.029830037
+categorical__Crop_Cotton(lint),0.027165107
+categorical__Crop_Bajra,0.02701593
+categorical__Crop_Sunflower,0.025042169
+categorical__Crop_Tea,0.023283167
+categorical__District_DANTEWADA,0.022692788
+categorical__District_DARJEELING,0.02178489
+categorical__District_WASHIM,0.021707399
+categorical__District_AURANGABAD,0.021611268
+categorical__Crop_Rapeseed &Mustard,0.021406945
+categorical__District_VILLUPURAM,0.020029278
+categorical__District_JHUNJHUNU,0.018358938
+categorical__District_JHAJJAR,0.018100418
+categorical__District_BURHANPUR,0.018006263
+categorical__District_MUKTSAR,0.017937742
+categorical__District_RAJKOT,0.017830329
+categorical__Crop_Coffee,0.01758994
+categorical__District_SEHORE,0.016433373
+categorical__District_MAHENDRAGARH,0.01629458
+categorical__Crop_Other Kharif pulses,0.015513504
+categorical__District_NUAPADA,0.0148980105
+categorical__District_DHAR,0.014781965
+categorical__State_Manipur,0.014279828
+categorical__District_PATIALA,0.013859569
+categorical__District_SOLAPUR,0.013644032
+categorical__District_DHAMTARI,0.013391913
+categorical__State_Jammu and Kashmir,0.013266609
+categorical__State_Odisha,0.013120625
+categorical__District_DEWAS,0.013114704
+categorical__District_HAVERI,0.012859472
+categorical__District_BENGALURU URBAN,0.012119774
+categorical__District_BOUDH,0.011710408
+categorical__District_CHIKMAGALUR,0.011632795
+categorical__District_HATHRAS,0.011338759
+categorical__District_SURAT,0.01125647
+categorical__District_BATHINDA,0.010881939
+categorical__District_JAUNPUR,0.010849783
+categorical__District_GANDHINAGAR,0.010613521
+categorical__District_JABALPUR,0.010383587
+categorical__District_ARWAL,0.010231137
+categorical__District_MYSORE,0.010064887
+categorical__District_BANAS KANTHA,0.010028398
+categorical__District_BANKURA,0.009338987
+categorical__District_PRATAPGARH,0.00908938
+categorical__District_DEHRADUN,0.008650066
+categorical__District_MADHEPURA,0.008304945
+categorical__District_RAE BARELI,0.008096863
+categorical__District_FIROZEPUR,0.007448519
+categorical__District_KACHCHH,0.0072470666
+categorical__District_MANSA,0.0071906867
+categorical__Crop_Sapota,0.00704681
+categorical__Crop_Sannhamp,0.007022941
+categorical__District_GAUTAM BUDDHA NAGAR,0.0066921837
+categorical__District_SUPAUL,0.0065104812
+categorical__State_Uttarakhand,0.0064351256
+categorical__District_GADAG,0.006241889
+categorical__District_BEED,0.006181324
+categorical__Crop_Snak Guard,0.006177571
+categorical__District_KHEDA,0.0061770375
+categorical__District_BEGUSARAI,0.006121523
+categorical__District_GANGANAGAR,0.0053834687
+categorical__District_UPPER SUBANSIRI,0.005225666
+categorical__District_CHAMPAWAT,0.00514519
+categorical__District_KANDHAMAL,0.005123113
+categorical__District_WEST SIANG,0.0049223816
+categorical__District_CHAMARAJANAGAR,0.00487877
+categorical__District_SAMASTIPUR,0.0048533287
+categorical__District_VAISHALI,0.004368246
+categorical__Crop_Safflower,0.004326743
+categorical__District_RAIPUR,0.0041399007
+categorical__District_BARABANKI,0.0041118236
+categorical__District_SANT KABEER NAGAR,0.0040522586
+categorical__District_GWALIOR,0.004030216
+categorical__District_KAUSHAMBI,0.003872472
+categorical__District_SHIMOGA,0.0038573302
+categorical__District_REWARI,0.003730429
+categorical__District_VALSAD,0.0032712366
+categorical__District_KOLAR,0.0030936552
+categorical__District_BHAVNAGAR,0.0030069025
+categorical__Crop_Other Cereals & Millets,0.0027826072
+categorical__District_BALRAMPUR,0.0024825367
+categorical__District_BASTAR,0.0024523172
+categorical__District_EAST GARO HILLS,0.0023197737
+categorical__District_NAVSARI,0.0022854584
+categorical__District_MAHESANA,0.0021525736
+categorical__District_PATAN,0.0021525042
+categorical__District_THOUBAL,0.0017352941
+categorical__State_Tripura,0.0017133894
+categorical__District_ALWAR,0.0012402707
+categorical__Crop_Khesari,0.0012246564
+categorical__District_DAKSHIN KANNAD,0.0010650043
+categorical__District_UDUPI,0.0010650043
+categorical__District_ANAND,0.0010485577
+categorical__District_RI BHOI,0.00092431565
+categorical__Crop_Cucumber,0.00089244335
+categorical__District_PASHCHIM CHAMPARAN,0.0006879955
+categorical__Crop_Cashewnut Raw,0.000670515
+categorical__District_CHIKBALLAPUR,0.000625817
+categorical__District_SERCHHIP,0.00055561756
+categorical__District_MUZAFFARPUR,0.00052886194
+categorical__District_BHIND,0.00051402446
+categorical__District_FIROZABAD,0.00045530548
+categorical__District_MADHUBANI,0.00044592738
+categorical__District_BALAGHAT,0.0003959905
+categorical__District_CUTTACK,0.0003897615
+categorical__Crop_Oilseeds total,0.00032261503
+categorical__Crop_Samai,0.00027330895
+categorical__District_BANGALORE RURAL,0.00026690023
+categorical__District_SIRSA,0.00013090776
+categorical__District_MOKOKCHUNG,6.12521e-05
+categorical__District_DHANBAD,1.2113868e-06
+categorical__State_Jharkhand,5.558593e-07
+categorical__Crop_Turnip,0.0
+categorical__District_AMRAVATI,0.0
+categorical__District_AMETHI,0.0
+categorical__District_GAJAPATI,0.0
+categorical__District_GADCHIROLI,0.0
+categorical__District_FATEHPUR,0.0
+categorical__District_FATEHABAD,0.0
+categorical__District_FARRUKHABAD,0.0
+categorical__District_FARIDABAD,0.0
+categorical__District_FAIZABAD,0.0
+categorical__District_ETAWAH,0.0
+categorical__District_ETAH,0.0
+categorical__District_EAST SINGHBUM,0.0
+categorical__Crop_Redish,0.0
+categorical__Crop_Ribed Guard,0.0
+categorical__Crop_Ricebean (nagadal),0.0
+categorical__District_JHALAWAR,0.0
+categorical__District_JHANSI,0.0
+categorical__District_JHARSUGUDA,0.0
+categorical__District_JIND,0.0
+categorical__District_JODHPUR,0.0
+categorical__District_KABIRDHAM,0.0
+categorical__District_EAST KHASI HILLS,0.0
+categorical__Crop_Other Citrus Fruit,0.0
+categorical__Crop_Other Dry Fruit,0.0
+categorical__District_AHMADABAD,0.0
+categorical__District_AIZAWL,0.0
+categorical__District_AJMER,0.0
+categorical__District_AKOLA,0.0
+categorical__District_LONGDING,0.0
+categorical__District_LONGLENG,0.0
+categorical__District_LOWER DIBANG VALLEY,0.0
+categorical__District_LOWER SUBANSIRI,0.0
+categorical__District_LUCKNOW,0.0
+categorical__District_CHURACHANDPUR,0.0
+categorical__District_CHURU,0.0
+categorical__District_DAMOH,0.0
+categorical__District_KOLHAPUR,0.0
+categorical__District_KONDAGAON,0.0
+categorical__District_KORAPUT,0.0
+categorical__District_KORBA,0.0
+categorical__District_KOREA,0.0
+categorical__District_KOTA,0.0
+categorical__District_KULGAM,0.0
+categorical__District_KULLU,0.0
+categorical__District_MANDLA,0.0
+categorical__District_MANDSAUR,0.0
+categorical__District_JAGATSINGHAPUR,0.0
+categorical__District_JAIPUR,0.0
+categorical__District_JAISALMER,0.0
+categorical__District_JAJAPUR,0.0
+categorical__District_KUSHI NAGAR,0.0
+categorical__District_LAHUL AND SPITI,0.0
+categorical__District_LAKHISARAI,0.0
+categorical__District_LALITPUR,0.0
+categorical__District_LATEHAR,0.0
+categorical__District_LATUR,0.0
+categorical__District_LAWNGTLAI,0.0
+categorical__District_LEH LADAKH,0.0
+categorical__District_LOHARDAGA,0.0
+categorical__District_LOHIT,0.0
+categorical__District_JANJGIR-CHAMPA,0.0
+categorical__District_JASHPUR,0.0
+categorical__District_JEHANABAD,0.0
+categorical__District_JHABUA,0.0
+categorical__District_MATHURA,0.0
+categorical__District_MAU,0.0
+categorical__District_MEDINIPUR EAST,0.0
+categorical__District_MEERUT,0.0
+categorical__District_MAHARAJGANJ,0.0
+categorical__District_MAHASAMUND,0.0
+categorical__District_MAHBUBNAGAR,0.0
+categorical__District_MAHOBA,0.0
+categorical__District_MAINPURI,0.0
+categorical__District_MALKANGIRI,0.0
+categorical__District_MAMIT,0.0
+categorical__District_MANDI,0.0
+categorical__District_MORADABAD,0.0
+categorical__District_MORENA,0.0
+categorical__District_MUNGELI,0.0
+categorical__District_MUNGER,0.0
+categorical__District_MUZAFFARNAGAR,0.0
+categorical__District_NABARANGPUR,0.0
+categorical__District_CHAMBA,0.0
+categorical__District_CHAMOLI,0.0
+categorical__District_CHAMPHAI,0.0
+categorical__District_JALAUN,0.0
+categorical__District_JALNA,0.0
+categorical__District_JALORE,0.0
+categorical__District_JAMMU,0.0
+categorical__District_JAMNAGAR,0.0
+categorical__District_JAMTARA,0.0
+categorical__District_JAMUI,0.0
+categorical__District_CHANDRAPUR,0.0
+categorical__District_CHANGLANG,0.0
+categorical__District_CHATRA,0.0
+categorical__District_CHHATARPUR,0.0
+categorical__District_NAGAUR,0.0
+categorical__District_NAGPUR,0.0
+categorical__District_NAINITAL,0.0
+categorical__District_NALANDA,0.0
+categorical__District_NAMSAI,0.0
+categorical__District_NANDED,0.0
+categorical__District_NANDURBAR,0.0
+categorical__District_NARAYANPUR,0.0
+categorical__District_NARSINGHPUR,0.0
+categorical__District_MEWAT,0.0
+categorical__District_MIRZAPUR,0.0
+categorical__District_MON,0.0
+categorical__District_NEEMUCH,0.0
+categorical__District_NORTH DISTRICT,0.0
+categorical__District_NORTH GARO HILLS,0.0
+categorical__District_NORTH TRIPURA,0.0
+categorical__District_PAKUR,0.0
+categorical__District_BHOJPUR,0.0
+categorical__District_BHOPAL,0.0
+categorical__District_BIJNOR,0.0
+categorical__District_BIKANER,0.0
+categorical__District_BILASPUR,0.0
+categorical__District_BISHNUPUR,0.0
+categorical__District_BOKARO,0.0
+categorical__District_BUDAUN,0.0
+categorical__District_CHANDAULI,0.0
+categorical__District_CHANDEL,0.0
+categorical__District_CHANDIGARH,0.0
+categorical__District_KHORDHA,0.0
+categorical__District_KHOWAI,0.0
+categorical__District_KHUNTI,0.0
+categorical__District_KINNAUR,0.0
+categorical__District_KIPHIRE,0.0
+categorical__District_KISHANGANJ,0.0
+categorical__District_KISHTWAR,0.0
+categorical__District_KODAGU,0.0
+categorical__District_KODERMA,0.0
+categorical__District_KOHIMA,0.0
+categorical__District_CHITRADURGA,0.0
+categorical__District_CHITRAKOOT,0.0
+categorical__District_CHITTORGARH,0.0
+categorical__District_DEOGHAR,0.0
+categorical__District_NAWADA,0.0
+categorical__District_NAYAGARH,0.0
+categorical__District_DIBANG VALLEY,0.0
+categorical__District_DIMAPUR,0.0
+categorical__District_DINDORI,0.0
+categorical__District_HAZARIBAGH,0.0
+categorical__District_HINGOLI,0.0
+categorical__District_HISAR,0.0
+categorical__District_HOSHANGABAD,0.0
+categorical__District_HYDERABAD,0.0
+categorical__District_IMPHAL EAST,0.0
+categorical__District_IMPHAL WEST,0.0
+categorical__District_INDORE,0.0
+categorical__District_BULANDSHAHR,0.0
+categorical__District_BULDHANA,0.0
+categorical__District_BUNDI,0.0
+categorical__District_PALAMU,0.0
+categorical__District_PALGHAR,0.0
+categorical__District_RAMANAGARA,0.0
+categorical__District_RAMBAN,0.0
+categorical__District_PALI,0.0
+categorical__District_PALWAL,0.0
+categorical__District_PANCH MAHALS,0.0
+categorical__District_PANCHKULA,0.0
+categorical__District_PANNA,0.0
+categorical__District_PAPUM PARE,0.0
+categorical__District_PARBHANI,0.0
+categorical__District_PATNA,0.0
+categorical__District_PAURI GARHWAL,0.0
+categorical__District_PEREN,0.0
+categorical__District_PHEK,0.0
+categorical__District_PILIBHIT,0.0
+categorical__District_PITHORAGARH,0.0
+categorical__District_POONCH,0.0
+categorical__District_SAGAR,0.0
+categorical__District_SAHARANPUR,0.0
+categorical__District_SAHARSA,0.0
+categorical__District_SAHEBGANJ,0.0
+categorical__District_PORBANDAR,0.0
+categorical__District_PULWAMA,0.0
+categorical__District_PURBI CHAMPARAN,0.0
+categorical__District_PURI,0.0
+categorical__District_PURNIA,0.0
+categorical__District_RAIGAD,0.0
+categorical__District_RAIGARH,0.0
+categorical__District_RAISEN,0.0
+categorical__District_RAJAURI,0.0
+categorical__District_RAJGARH,0.0
+categorical__District_RAJNANDGAON,0.0
+categorical__District_RAJSAMAND,0.0
+categorical__District_SATARA,0.0
+categorical__District_SATNA,0.0
+categorical__District_SAWAI MADHOPUR,0.0
+categorical__District_SENAPATI,0.0
+categorical__District_SEONI,0.0
+categorical__District_SEPAHIJALA,0.0
+categorical__District_RAMGARH,0.0
+categorical__District_RAMPUR,0.0
+categorical__District_RANCHI,0.0
+categorical__District_RATNAGIRI,0.0
+categorical__District_RAYAGADA,0.0
+categorical__District_REASI,0.0
+categorical__District_REWA,0.0
+categorical__District_ROHTAK,0.0
+categorical__District_ROHTAS,0.0
+categorical__District_RUDRA PRAYAG,0.0
+categorical__District_SHEOPUR,0.0
+categorical__District_SHIMLA,0.0
+categorical__District_SHIVPURI,0.0
+categorical__District_SHOPIAN,0.0
+categorical__District_SHRAVASTI,0.0
+categorical__District_SIDDHARTH NAGAR,0.0
+categorical__District_SIDHI,0.0
+categorical__District_SIKAR,0.0
+categorical__District_SAIHA,0.0
+categorical__District_SAMBA,0.0
+categorical__District_SAMBALPUR,0.0
+categorical__District_SAMBHAL,0.0
+categorical__District_SANGLI,0.0
+categorical__District_SANT RAVIDAS NAGAR,0.0
+categorical__District_SARAIKELA KHARSAWAN,0.0
+categorical__District_SARAN,0.0
+categorical__District_KARIMNAGAR,0.0
+categorical__District_KASGANJ,0.0
+categorical__District_KATHUA,0.0
+categorical__District_KATIHAR,0.0
+categorical__District_KENDRAPARA,0.0
+categorical__District_KENDUJHAR,0.0
+categorical__District_KHAGARIA,0.0
+categorical__District_KHANDWA,0.0
+categorical__District_KHARGONE,0.0
+categorical__District_KAIMUR (BHABUA),0.0
+categorical__District_SHAHDOL,0.0
+categorical__District_SHAHJAHANPUR,0.0
+categorical__District_SHAJAPUR,0.0
+categorical__District_SHAMLI,0.0
+categorical__District_SHEIKHPURA,0.0
+categorical__District_SHEOHAR,0.0
+categorical__District_SIMDEGA,0.0
+categorical__District_SINDHUDURG,0.0
+categorical__District_SIRMAUR,0.0
+categorical__District_SIROHI,0.0
+categorical__District_SITAMARHI,0.0
+categorical__District_BELLARY,0.0
+categorical__District_BEMETARA,0.0
+categorical__District_BETUL,0.0
+categorical__District_BHADRAK,0.0
+categorical__District_BHAGALPUR,0.0
+categorical__District_BHANDARA,0.0
+categorical__District_BHARATPUR,0.0
+categorical__District_BHARUCH,0.0
+categorical__District_DEORIA,0.0
+categorical__District_DHALAI,0.0
+categorical__District_KARGIL,0.0
+categorical__District_SULTANPUR,0.0
+categorical__District_SUNDARGARH,0.0
+categorical__District_BHILWARA,0.0
+categorical__District_BHIWANI,0.0
+categorical__District_SITAPUR,0.0
+categorical__District_SIWAN,0.0
+categorical__District_SOLAN,0.0
+categorical__District_SONBHADRA,0.0
+categorical__District_SONEPUR,0.0
+categorical__District_SONIPAT,0.0
+categorical__District_SOUTH DISTRICT,0.0
+categorical__District_SOUTH GARO HILLS,0.0
+categorical__District_SOUTH TRIPURA,0.0
+categorical__District_SOUTH WEST GARO HILLS,0.0
+categorical__District_GORAKHPUR,0.0
+categorical__District_GUMLA,0.0
+categorical__District_BARGARH,0.0
+categorical__District_BARMER,0.0
+categorical__District_BARWANI,0.0
+categorical__District_GUNA,0.0
+categorical__District_GURGAON,0.0
+categorical__District_HAMIRPUR,0.0
+categorical__District_HANUMANGARH,0.0
+categorical__District_HAPUR,0.0
+categorical__District_HARDA,0.0
+categorical__District_HARDOI,0.0
+categorical__District_HARIDWAR,0.0
+categorical__District_DHENKANAL,0.0
+categorical__District_DHOLPUR,0.0
+categorical__District_SOUTH WEST KHASI HILLS,0.0
+categorical__District_SRINAGAR,0.0
+categorical__District_SUKMA,0.0
+categorical__District_UDAM SINGH NAGAR,0.0
+categorical__District_UDHAMPUR,0.0
+categorical__District_UJJAIN,0.0
+categorical__District_UKHRUL,0.0
+categorical__District_UMARIA,0.0
+categorical__District_SURAJPUR,0.0
+categorical__District_SURENDRANAGAR,0.0
+categorical__District_SURGUJA,0.0
+categorical__District_TAMENGLONG,0.0
+categorical__District_TAPI,0.0
+categorical__District_TAWANG,0.0
+categorical__District_BANKA,0.0
+categorical__District_BANSWARA,0.0
+categorical__District_BARAMULLA,0.0
+categorical__District_BARAN,0.0
+categorical__District_BAREILLY,0.0
+categorical__District_UTTAR KASHI,0.0
+categorical__District_VARANASI,0.0
+categorical__District_VIDISHA,0.0
+categorical__District_VIRUDHUNAGAR,0.0
+categorical__District_WARANGAL,0.0
+categorical__District_WARDHA,0.0
+categorical__District_WEST DISTRICT,0.0
+categorical__District_WEST GARO HILLS,0.0
+categorical__District_BASTI,0.0
+categorical__District_TEHRI GARHWAL,0.0
+categorical__District_THANE,0.0
+categorical__District_TIKAMGARH,0.0
+categorical__District_TIRAP,0.0
+categorical__District_TONK,0.0
+categorical__District_TUENSANG,0.0
+categorical__District_UDAIPUR,0.0
+categorical__District_WEST SINGHBHUM,0.0
+categorical__District_WEST TRIPURA,0.0
+categorical__District_WOKHA,0.0
+categorical__District_YAMUNANAGAR,0.0
+categorical__District_YAVATMAL,0.0
+categorical__District_BAGALKOT,0.0
+categorical__District_BAGESHWAR,0.0
+categorical__District_BAGHPAT,0.0
+categorical__District_BAHRAICH,0.0
+categorical__District_BALANGIR,0.0
+categorical__District_BALESHWAR,0.0
+categorical__District_UNA,0.0
+categorical__District_UNAKOTI,0.0
+categorical__District_UNNAO,0.0
+categorical__District_UPPER SIANG,0.0
+categorical__District_UTTAR KANNAD,0.0
+categorical__District_KAITHAL,0.0
+categorical__District_KALAHANDI,0.0
+categorical__District_KANGRA,0.0
+categorical__District_KANKER,0.0
+categorical__District_KANNAUJ,0.0
+categorical__District_KANPUR DEHAT,0.0
+categorical__District_KANPUR NAGAR,0.0
+categorical__District_KARAULI,0.0
+categorical__District_DARBHANGA,0.0
+categorical__District_DATIA,0.0
+categorical__District_DAUSA,0.0
+categorical__District_DAVANGERE,0.0
+categorical__District_DEOGARH,0.0
+categorical__District_AGRA,0.0
+categorical__District_WEST KAMENG,0.0
+categorical__District_WEST KHASI HILLS,0.0
+categorical__District_GARHWA,0.0
+categorical__District_BALLIA,0.0
+categorical__District_BALOD,0.0
+categorical__District_BALODA BAZAR,0.0
+categorical__District_BANDA,0.0
+categorical__District_BANDIPORA,0.0
+categorical__District_ZUNHEBOTO,0.0
+categorical__Crop_Apple,0.0
+categorical__Crop_Arcanut (Processed),0.0
+categorical__Crop_Ash Gourd,0.0
+categorical__Crop_Atcanut (Raw),0.0
+categorical__Crop_Bean,0.0
+categorical__Crop_Beans & Mutter(Vegetable),0.0
+categorical__Crop_Beet Root,0.0
+categorical__Crop_Ber,0.0
+categorical__District_WEST JAINTIA HILLS,0.0
+categorical__District_ASHOKNAGAR,0.0
+categorical__District_AURAIYA,0.0
+categorical__District_AZAMGARH,0.0
+categorical__District_BADGAM,0.0
+categorical__Crop_Bhindi,0.0
+categorical__Crop_Bitter Gourd,0.0
+categorical__Crop_Bottle Gourd,0.0
+categorical__Crop_Carrot,0.0
+categorical__Crop_Cashewnut Processed,0.0
+categorical__District_AMROHA,0.0
+categorical__District_ANANTNAG,0.0
+categorical__District_ANJAW,0.0
+categorical__District_ANUGUL,0.0
+categorical__District_ANUPPUR,0.0
+categorical__District_GANDERBAL,0.0
+categorical__District_GANJAM,0.0
+categorical__Crop_Lab-Lab,0.0
+categorical__Crop_Lemon,0.0
+categorical__Crop_Lentil,0.0
+categorical__Crop_Litchi,0.0
+categorical__Crop_Moth,0.0
+categorical__District_GARIYABAND,0.0
+categorical__District_GAYA,0.0
+categorical__District_GHAZIABAD,0.0
+categorical__District_GHAZIPUR,0.0
+categorical__District_GIRIDIH,0.0
+categorical__District_GODDA,0.0
+categorical__District_GOMATI,0.0
+categorical__District_GONDA,0.0
+categorical__District_GONDIA,0.0
+categorical__District_GOPALGANJ,0.0
+categorical__District_ARARIA,0.0
+categorical__District_ALIGARH,0.0
+categorical__District_ALIRAJPUR,0.0
+categorical__District_ALLAHABAD,0.0
+categorical__District_ALMORA,0.0
+categorical__District_AMBALA,0.0
+categorical__District_AMBEDKAR NAGAR,0.0
+categorical__District_EAST KAMENG,0.0
+categorical__Crop_Cauliflower,0.0
+categorical__Crop_Citrus Fruit,0.0
+categorical__Crop_Colocosia,0.0
+categorical__Crop_Cond-spcs other,0.0
+categorical__Crop_Cowpea(Lobia),0.0
+categorical__Crop_Jobster,0.0
+categorical__Crop_Jute & mesta,0.0
+categorical__Crop_Kapas,0.0
+categorical__Crop_Korra,0.0
+categorical__District_AMRELI,0.0
+categorical__Crop_Other Fresh Fruits,0.0
+categorical__Crop_Peach,0.0
+categorical__Crop_Pear,0.0
+categorical__Crop_Peas  (vegetable),0.0
+categorical__Crop_Perilla,0.0
+categorical__Crop_Plums,0.0
+categorical__Crop_Pome Granet,0.0
+categorical__State_Sikkim,0.0
+categorical__Crop_other fibres,0.0
+categorical__Crop_other misc. pulses,0.0
+categorical__Crop_Soyabean,0.0
+categorical__State_Chandigarh,0.0
+categorical__Crop_Total foodgrain,0.0
+categorical__Crop_Pump Kin,0.0
+categorical__Crop_Rajmash Kholar,0.0
+categorical__District_KUPWARA,0.0
+categorical__District_KURUKSHETRA,0.0
+categorical__District_KURUNG KUMEY,0.0
+categorical__District_KHERI,0.0
+categorical__Crop_Varagu,0.0
+categorical__Crop_Water Melon,0.0
+categorical__Crop_Yam,0.0
+categorical__District_DODA,0.0
+categorical__District_DOHAD,0.0
+categorical__District_DUMKA,0.0
+categorical__District_DUNGARPUR,0.0
+categorical__District_DURG,0.0
+categorical__District_EAST DISTRICT,0.0
+categorical__District_EAST JAINTIA HILLS,0.0
+categorical__District_ADILABAD,0.0
+categorical__District_AGAR MALWA,0.0
