@@ -549,8 +549,28 @@ def build_map_chart(filtered_crop):
     return fig
 
 
+def merge_crop_weather(filtered_crop, filtered_weather):
+    weather_columns = [
+        "Mean_Temperature",
+        "Avg_Max_Temp",
+        "Avg_Min_Temp",
+        "Total_Precipitation_mm",
+        "Max_Wind_Speed",
+    ]
+    weather_by_state_year = (
+        filtered_weather.groupby(["State", "Year"], as_index=False)[weather_columns]
+        .mean()
+    )
+    return filtered_crop.merge(
+        weather_by_state_year,
+        on=["State", "Year"],
+        how="left",
+        validate="many_to_one",
+    )
+
+
 def build_weather_scatter(filtered_crop, filtered_weather):
-    merged = filtered_crop.merge(filtered_weather[["State", "Year", "Mean_Temperature", "Avg_Max_Temp", "Avg_Min_Temp", "Total_Precipitation_mm", "Max_Wind_Speed"]], on=["State", "Year"], how="left")
+    merged = merge_crop_weather(filtered_crop, filtered_weather)
     merged = merged.dropna(subset=["Mean_Temperature", "Total_Precipitation_mm", "Yield"]).copy()
     if merged.empty:
         return go.Figure()
@@ -584,7 +604,7 @@ def build_weather_scatter(filtered_crop, filtered_weather):
 
 
 def build_heatmap(filtered_crop, filtered_weather):
-    merged = filtered_crop.merge(filtered_weather[["State", "Year", "Mean_Temperature", "Avg_Max_Temp", "Avg_Min_Temp", "Total_Precipitation_mm", "Max_Wind_Speed"]], on=["State", "Year"], how="left")
+    merged = merge_crop_weather(filtered_crop, filtered_weather)
     if merged.empty:
         return go.Figure()
 
