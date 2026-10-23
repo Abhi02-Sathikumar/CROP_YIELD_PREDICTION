@@ -1,12 +1,11 @@
-from __future__ import annotations
 
+from __future__ import annotations
 import copy
 import io
 import json
 import warnings
 from pathlib import Path
 from typing import Any
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -14,7 +13,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from sklearn.exceptions import InconsistentVersionWarning
-
 
 PROJECT_DIR = Path(__file__).resolve().parent
 PRODUCTION_PATH = PROJECT_DIR / "data" / "processed_data" / "crop_production_preprocessed.csv"
@@ -40,14 +38,12 @@ REQUIRED_PRODUCTION_COLUMNS = [
     "Production",
 ]
 
-
 st.set_page_config(
     page_title="AgriPulse | Agricultural Intelligence",
     page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
 
 def normalize_state(value: Any) -> str:
     """Normalize state names for joins to the bundled GeoJSON boundaries."""
@@ -60,12 +56,10 @@ def normalize_state(value: Any) -> str:
     }
     return aliases.get(key, key)
 
-
 @st.cache_data(show_spinner="Loading crop production records...")
 def load_production_data() -> pd.DataFrame:
     if not PRODUCTION_PATH.exists():
         raise FileNotFoundError(f"Required production dataset not found: {PRODUCTION_PATH}")
-
     frame = pd.read_csv(PRODUCTION_PATH)
     frame = frame.rename(
         columns={
@@ -77,15 +71,12 @@ def load_production_data() -> pd.DataFrame:
     missing = [column for column in REQUIRED_PRODUCTION_COLUMNS if column not in frame]
     if missing:
         raise ValueError(f"Production dataset is missing required columns: {missing}")
-
     for column in ["Year", "Area", "Production"]:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
-
     if "Yield" in frame:
         frame["Yield"] = pd.to_numeric(frame["Yield"], errors="coerce")
     else:
         frame["Yield"] = np.nan
-
     frame = frame.replace([np.inf, -np.inf], np.nan)
     frame = frame.dropna(subset=REQUIRED_PRODUCTION_COLUMNS).copy()
     frame = frame[(frame["Area"] > 0) & (frame["Production"] >= 0)]
@@ -97,18 +88,15 @@ def load_production_data() -> pd.DataFrame:
         frame[column] = frame[column].astype(str).str.strip()
     return frame
 
-
 @st.cache_data(show_spinner="Loading matched crop and weather records...")
 def load_weather_data() -> tuple[pd.DataFrame, str | None]:
     if not WEATHER_PATH.exists():
         return pd.DataFrame(), f"Optional weather dataset was not found: {WEATHER_PATH}"
-
     frame = pd.read_csv(WEATHER_PATH)
     required = REQUIRED_PRODUCTION_COLUMNS + ["Yield"] + WEATHER_FEATURES
     missing = [column for column in required if column not in frame]
     if missing:
         return pd.DataFrame(), f"Weather analysis is unavailable; missing columns: {missing}"
-
     for column in ["Year", "Area", "Production", "Yield"] + WEATHER_FEATURES:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
     frame = frame.replace([np.inf, -np.inf], np.nan)
@@ -117,12 +105,10 @@ def load_weather_data() -> tuple[pd.DataFrame, str | None]:
     frame["Year"] = frame["Year"].astype(int)
     return frame, None
 
-
 @st.cache_data(show_spinner="Loading state/year weather observations...")
 def load_state_weather_data() -> tuple[pd.DataFrame, str | None]:
     if not STATE_WEATHER_PATH.exists():
         return pd.DataFrame(), f"Optional state/year weather dataset was not found: {STATE_WEATHER_PATH}"
-
     frame = pd.read_csv(STATE_WEATHER_PATH)
     required = ["State", "Year"] + WEATHER_FEATURES
     missing = [column for column in required if column not in frame]
@@ -133,7 +119,6 @@ def load_state_weather_data() -> tuple[pd.DataFrame, str | None]:
     frame = frame.replace([np.inf, -np.inf], np.nan).dropna(subset=required).copy()
     frame["Year"] = frame["Year"].astype(int)
     return frame, None
-
 
 @st.cache_data(show_spinner="Loading the soil sample dataset...")
 def load_soil_data() -> tuple[pd.DataFrame, str | None]:
@@ -148,7 +133,6 @@ def load_soil_data() -> tuple[pd.DataFrame, str | None]:
         if column in frame:
             frame[column] = pd.to_numeric(frame[column], errors="coerce")
     return frame, None
-
 
 @st.cache_data(show_spinner="Loading India state boundaries...")
 def load_geojson() -> tuple[dict[str, Any] | None, str | None]:
@@ -166,7 +150,6 @@ def load_geojson() -> tuple[dict[str, Any] | None, str | None]:
         properties["map_key"] = normalize_state(properties["NAME_1"])
     return geojson, None
 
-
 @st.cache_resource(show_spinner="Loading the trained weather-aware yield model...")
 def load_yield_model() -> tuple[Any | None, str | None, list[str]]:
     if not MODEL_PATH.exists():
@@ -178,13 +161,11 @@ def load_yield_model() -> tuple[Any | None, str | None, list[str]]:
         mismatch_messages = [str(item.message) for item in captured]
     except (FileNotFoundError, ModuleNotFoundError, ImportError, OSError, ValueError, AttributeError, TypeError) as error:
         return None, f"The trained model could not be loaded: {type(error).__name__}: {error}", []
-
     if not callable(getattr(model, "predict", None)):
         return None, "The model artifact does not provide a prediction interface.", mismatch_messages
     if not hasattr(model, "feature_names_in_"):
         return None, "The model artifact does not declare its input feature names.", mismatch_messages
     return model, None, mismatch_messages
-
 
 def format_value(value: float) -> str:
     if not np.isfinite(value):
@@ -197,7 +178,6 @@ def format_value(value: float) -> str:
     if absolute >= 10_000:
         return f"{value / 1_000:,.1f}K"
     return f"{value:,.2f}"
-
 
 def plotly_theme(fig: go.Figure) -> go.Figure:
     fig.update_layout(
@@ -212,10 +192,8 @@ def plotly_theme(fig: go.Figure) -> go.Figure:
     fig.update_yaxes(gridcolor="rgba(191, 220, 199, 0.12)", zeroline=False, automargin=True)
     return fig
 
-
 def show_empty(message: str) -> None:
     st.info(message)
-
 
 def make_pdf_report(
     filtered: pd.DataFrame,
@@ -229,7 +207,6 @@ def make_pdf_report(
     from reportlab.lib.units import inch
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     from xml.sax.saxutils import escape
-
     output = io.BytesIO()
     document = SimpleDocTemplate(
         output,
@@ -289,17 +266,14 @@ def make_pdf_report(
     document.build(story)
     return output.getvalue()
 
-
 try:
     production = load_production_data()
 except (FileNotFoundError, ValueError, pd.errors.ParserError) as error:
     st.error(f"Unable to load the primary crop dataset. {error}")
     st.stop()
-
 weather, weather_message = load_weather_data()
 state_weather, state_weather_message = load_state_weather_data()
 soil_data, soil_message = load_soil_data()
-
 st.markdown(
     """
     <style>
@@ -330,7 +304,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
 st.markdown(
     """
     <div class="hero">
@@ -342,7 +315,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
 with st.sidebar:
     st.markdown("## 🌿 AgriPulse")
     st.caption("Crop yield & smart irrigation intelligence")
@@ -381,7 +353,6 @@ with st.sidebar:
         value=(year_min, year_max),
     )
     st.caption(f"Production coverage: {year_min}–{year_max}")
-
 filtered = production[
     production["Year"].between(year_range[0], year_range[1])
 ].copy()
@@ -393,7 +364,6 @@ if district_filter != "All districts":
     filtered = filtered[filtered["District"] == district_filter]
 if season_filter != "All seasons":
     filtered = filtered[filtered["Season"] == season_filter]
-
 weather_filtered = weather
 if not weather.empty:
     weather_filtered = weather[weather["Year"].between(year_range[0], year_range[1])]
@@ -405,7 +375,6 @@ if not weather.empty:
         weather_filtered = weather_filtered[weather_filtered["District"] == district_filter]
     if season_filter != "All seasons":
         weather_filtered = weather_filtered[weather_filtered["Season"] == season_filter]
-
 if page == "Overview":
     st.header("Production overview")
     if filtered.empty:
@@ -421,7 +390,6 @@ if page == "Overview":
         c2.metric("Cultivated area", format_value(total_area), help="Sum of area in the source dataset's units.")
         c3.metric("Weighted average yield", format_value(weighted_yield), help="Total production divided by total area.")
         c4.metric("Records analyzed", f"{len(filtered):,}", help="Valid rows remaining after the selected filters.")
-
         left, right = st.columns([1.2, 1])
         with left:
             st.subheader("Production by crop")
@@ -436,7 +404,6 @@ if page == "Overview":
             fig.update_traces(line={"color": "#86d39b", "width": 3}, marker={"size": 7})
             fig.update_layout(xaxis_title="Year", yaxis_title="Production (source units)")
             st.plotly_chart(plotly_theme(fig), width="stretch")
-
         left, right = st.columns(2)
         with left:
             st.subheader("Leading crops")
@@ -444,7 +411,6 @@ if page == "Overview":
         with right:
             st.subheader("Leading regions")
             st.dataframe(regions.head(8).rename(columns={"Production": "Total production"}), hide_index=True, width="stretch")
-
         leader_crop = crops.iloc[0]
         leader_region = regions.iloc[0]
         st.success(
@@ -453,7 +419,6 @@ if page == "Overview":
             "These rankings describe the selected historical records, not current production."
         )
     st.caption("Yield summary uses total production divided by total cultivated area; units follow the source data.")
-
 elif page == "Weather analytics":
     st.header("Weather & yield analytics")
     if weather_message:
@@ -495,7 +460,6 @@ elif page == "Weather analytics":
             correlation = paired[feature].corr(paired["Yield"]) if len(paired) > 1 else np.nan
             if np.isfinite(correlation):
                 st.info(f"Pearson correlation in the filtered paired rows: **{correlation:.3f}**. This is an association, not evidence of causation.")
-
         st.subheader("Crop-wise weather comparison")
         crop_weather = weather_filtered.groupby("Crop", as_index=False).agg(
             Mean_Weather=(feature, "mean"),
@@ -511,7 +475,6 @@ elif page == "Weather analytics":
             hover_data=["Mean_Yield", "Records"],
         )
         st.plotly_chart(plotly_theme(fig), width="stretch")
-
         st.subheader("Interactive numeric correlation")
         numeric_candidates = ["Year", "Area", "Production", "Yield"] + WEATHER_FEATURES
         selected_numeric = st.multiselect(
@@ -536,7 +499,6 @@ elif page == "Weather analytics":
                     fig.update_layout(title="Pairwise Pearson correlations")
                     st.plotly_chart(plotly_theme(fig), width="stretch")
         st.warning("Humidity is not present in the matched crop/weather data, so humidity-versus-yield analysis is unavailable.")
-
 elif page == "Regional map":
     st.header("Regional production map")
     geojson, geojson_message = load_geojson()
@@ -591,7 +553,6 @@ elif page == "Regional map":
             if unmatched:
                 st.caption("Not displayed because names do not match the supplied boundaries: " + ", ".join(unmatched))
             st.caption("The supplied boundaries are state/territory-level only; no district polygons are included.")
-
 elif page == "Soil nutrients":
     st.header("Soil nutrient sample analysis")
     if soil_message:
@@ -618,7 +579,6 @@ elif page == "Soil nutrients":
         st.subheader("Sample dataset summary")
         st.dataframe(soil_data[["N", "P", "K"]].describe().round(2), width="stretch")
         st.info("Regional soil nutrient comparisons and nutrient-to-yield relationships cannot be calculated from these unlinked sample records.")
-
 elif page == "Irrigation advisory":
     st.header("Demonstration irrigation advisory")
     st.warning(
@@ -652,7 +612,6 @@ elif page == "Irrigation advisory":
             temperature_values = prior["Avg_Max_Temp"].dropna()
             rainfall = float(observation["Total_Precipitation_mm"])
             max_temp = float(observation["Avg_Max_Temp"])
-
             st.markdown(f"**Observed annual context:** {advisory_state}, {advisory_year}")
             c1, c2, c3 = st.columns(3)
             c1.metric("Total precipitation", f"{rainfall:,.1f} mm")
@@ -679,7 +638,6 @@ elif page == "Irrigation advisory":
                 st.write(f"- {note}")
             st.info("Check field soil moisture and consult local crop-stage guidance before any irrigation decision. Humidity was excluded because no humidity field exists in the matched weather data.")
             st.caption("Rules compare a single observed year with other available years for the same state; they are descriptive thresholds, not agronomic validation.")
-
 elif page == "Yield prediction":
     st.header("Yield prediction")
     st.markdown(
@@ -747,7 +705,6 @@ elif page == "Yield prediction":
                             f"Model: weather-aware random forest · Historical weather year: {prediction_year}. "
                             "No confidence interval, accuracy claim, or feature explanation is generated here."
                         )
-
 elif page == "Reports":
     st.header("Download analytical results")
     if filtered.empty:
@@ -789,7 +746,6 @@ elif page == "Reports":
         c1.metric("Production", format_value(total_production))
         c2.metric("Cultivated area", format_value(total_area))
         c3.metric("Weighted yield", format_value(total_production / total_area if total_area else float("nan")))
-
 if weather_message and page not in {"Weather analytics", "Irrigation advisory"}:
     st.caption(f"Weather-dependent features: {weather_message}")
 if state_weather_message and page not in {"Irrigation advisory", "Yield prediction"}:
