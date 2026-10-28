@@ -1329,7 +1329,9 @@ elif page == "Yield prediction":
             prediction_state = st.selectbox("State", model_states)
         with state_columns[1]:
             prediction_season = st.selectbox("Season", model_seasons)
-
+        with state_columns[2]:
+            prediction_year = st.selectbox("Year",list(range(2000, 2015)), index=14,)
+            
         normalized_state = normalize_state(prediction_state)
         state_weather_rows = state_weather[
             state_weather["State"].map(normalize_state) == normalized_state
