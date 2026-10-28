@@ -14,6 +14,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 from sklearn.exceptions import InconsistentVersionWarning
 
 from src.irrigation import (
@@ -389,7 +390,7 @@ def render_crop_model_background(enabled: bool) -> None:
     """
     html = html.replace("__MODEL_ENABLED__", json.dumps(enabled))
     html = html.replace("__MODEL_SOURCE__", json.dumps(model_source))
-    st.html(html, unsafe_allow_javascript=True)
+    components.html(html, height=0, scrolling=False,)
 
 
 def plotly_theme(fig: go.Figure) -> go.Figure:
@@ -628,13 +629,13 @@ with brand_columns[1]:
     st.markdown('<div class="agri-brand">AgriPulse</div>', unsafe_allow_html=True)
     st.markdown('<div class="agri-tagline">Agricultural intelligence for better decisions</div>', unsafe_allow_html=True)
 with brand_columns[2]:
-    st.segmented_control(
-        "Display mode",
-        ["Light", "Dark"],
-        key="theme_mode",
-        label_visibility="collapsed",
-        width="stretch",
-    )
+    st.radio(
+    "Display mode",
+    ["Light", "Dark"],
+    key="theme_mode",
+    horizontal=True,
+    label_visibility="collapsed",
+)
 
 st.markdown(
     """
@@ -749,10 +750,10 @@ if page == "Overview":
         left, right = st.columns(2)
         with left:
             st.subheader("Leading crops")
-            st.dataframe(crops.head(8).rename(columns={"Production": f"Total production ({PRODUCTION_UNIT})"}), hide_index=True, width="stretch")
+            st.dataframe(crops.head(8).rename(columns={"Production": f"Total production ({PRODUCTION_UNIT})"}), hide_index=True, use_container_width=True,)
         with right:
             st.subheader("Leading regions")
-            st.dataframe(regions.head(8).rename(columns={"Production": f"Total production ({PRODUCTION_UNIT})"}), hide_index=True, width="stretch")
+            st.dataframe(regions.head(8).rename(columns={"Production": f"Total production ({PRODUCTION_UNIT})"}), hide_index=True, use_container_width=True,)
 
         leader_crop = crops.iloc[0]
         leader_region = regions.iloc[0]
@@ -794,13 +795,14 @@ elif page == "Weather analytics":
         points = weather_filtered[[feature, "Yield", "Crop"]].dropna()
         if len(points) > 12000:
             points = points.sample(12000, random_state=42)
-        chart_mode = st.segmented_control(
+        chart_mode = st.radio(
             "Chart view",
             ["2D comparison", "3D exploration"],
-            default="2D comparison",
+            index=0,
             key="weather_chart_mode",
+            horizontal=True,
             label_visibility="collapsed",
-        )
+            )
         chart_mode = chart_mode or "2D comparison"
         if chart_mode == "2D comparison":
             if points.empty or points[feature].nunique() < 2 or points["Yield"].nunique() < 2:
@@ -965,13 +967,14 @@ elif page == "Regional map":
         geo_keys = {feature["properties"]["map_key"] for feature in geojson["features"]}
         mapped = state_totals[state_totals["map_key"].isin(geo_keys)].copy()
         unmatched = sorted(set(state_totals["State"]) - set(mapped["State"]))
-        metric = st.segmented_control(
+        metric = st.radio(
             f"Map measure (production in {PRODUCTION_UNIT}; yield in {YIELD_UNIT})",
             ["Production", "Yield"],
-            default="Production",
+            index=0,
             key="map_metric",
+            horizontal=True,
             label_visibility="collapsed",
-        )
+            )
         if metric is None:
             metric = "Production"
         metric_column = metric
@@ -1073,13 +1076,14 @@ elif page == "Soil nutrients":
             "Phosphorus (P)": "P",
             "Potassium (K)": "K",
         }
-        selected_nutrient = st.segmented_control(
+        selected_nutrient = st.radio(
             "Choose a nutrient",
             list(nutrient_labels),
-            default="Nitrogen (N)",
+            index=0,
             key="soil_nutrient",
+            horizontal=True,
             label_visibility="collapsed",
-        )
+            )
         selected_nutrient = selected_nutrient or "Nitrogen (N)"
         nutrient = nutrient_labels[selected_nutrient]
         valid_nutrient = soil_data[[nutrient, "label"]].dropna()
@@ -1122,7 +1126,7 @@ elif page == "Soil nutrients":
                 },
                 columns={"N": "Nitrogen (N)", "P": "Phosphorus (P)", "K": "Potassium (K)"},
             ).round(2)
-            st.dataframe(summary, width="stretch")
+            st.dataframe(summary, use_container_width=True,)
         st.caption("Regional comparisons and nutrient-to-yield relationships are not available because these samples are not linked to production records.")
 
 elif page == "Irrigation advisory":
@@ -1324,7 +1328,7 @@ elif page == "Yield prediction":
         model_states = sorted(weather["State"].dropna().unique()) if not weather.empty else state_options
         model_crops = sorted(production["Crop"].dropna().unique())
         model_seasons = sorted(production["Season"].dropna().unique())
-        state_columns = st.columns(2)
+        state_columns = st.columns(3)
         with state_columns[0]:
             prediction_state = st.selectbox("State", model_states)
         with state_columns[1]:
@@ -1336,16 +1340,30 @@ elif page == "Yield prediction":
         state_weather_rows = state_weather[
             state_weather["State"].map(normalize_state) == normalized_state
         ] if not state_weather.empty else state_weather
-        state_years = sorted(state_weather_rows["Year"].astype(int).unique().tolist())
-        prediction_year = state_years[-1] if state_years else None
-        if prediction_year is not None:
-            st.caption(
-                f"Using the latest available historical weather for {prediction_state}: {prediction_year}. "
-                "The bundled weather data ends in 2014, so this is not a current-year or live-weather prediction."
+        state_years = sorted(
+            state_weather_rows["Year"].astype(int).unique().tolist()
             )
-        else:
-            st.warning(f"No historical weather data is available for {prediction_state}.")
-        district_rows = weather[
+        available_prediction_years = [
+            year for year in range(2000, 2015)
+            if year in state_years
+            ]
+        if available_prediction_years:
+            if prediction_year not in available_prediction_years:
+                prediction_year = available_prediction_years[-1]
+            else:
+                prediction_year = None
+                if prediction_year is not None:
+                    st.caption(
+                        f"Using historical weather for {prediction_state} "
+                        f"in {prediction_year}. "
+                        "The model uses historical data, not live weather."
+                        )
+                else:
+                    st.warning(
+                        f"No historical weather data is available for "
+                        f"{prediction_state} between 2000 and 2014."
+                        )
+                    district_rows = weather[
             weather["State"].map(normalize_state) == normalized_state
         ] if not weather.empty else weather
         district_options = sorted(
