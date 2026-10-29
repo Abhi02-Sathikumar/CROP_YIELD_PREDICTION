@@ -1,463 +1,209 @@
-**🌾 Crop Yield Prediction & Smart Irrigation Advisory**
+# AgriPulse: Crop Yield Prediction and Irrigation Advisory
 
-An AI-powered agricultural intelligence system that predicts crop yield and provides smart irrigation recommendations using weather, soil, and historical crop production data.
+AgriPulse is a Streamlit dashboard for exploring Indian crop-production records, comparing historical weather and yield, viewing state-level production patterns, inspecting crop-recommendation soil samples, estimating crop yield, and generating a weather-based irrigation advisory.
 
-📌 Project Overview
+The app is a decision-support and educational tool. Its yield predictions and irrigation depths are estimates, not guarantees or agronomic prescriptions.
 
-Agriculture depends heavily on weather conditions, soil fertility, and effective water management. Inaccurate crop yield estimates can lead to financial losses, while improper irrigation can waste water or negatively affect crop growth.
+## Contents
 
-This project combines Data Science, Data Analytics, and Machine Learning to help farmers and agricultural planners make data-driven decisions.
+- [Features](#features)
+- [How the app works](#how-the-app-works)
+- [Project structure](#project-structure)
+- [Data and model files](#data-and-model-files)
+- [Install and run](#install-and-run)
+- [Using the dashboard](#using-the-dashboard)
+- [Training and analysis scripts](#training-and-analysis-scripts)
+- [Limitations and responsible use](#limitations-and-responsible-use)
+- [Troubleshooting](#troubleshooting)
+- [Technology](#technology)
 
-The system analyzes historical crop production records, weather conditions, and soil nutrient information to:
+## Features
 
-Predict seasonal crop yield in tons per hectare.
-Analyze the relationship between weather conditions and crop productivity.
-Identify regional crop production patterns across Indian districts.
-Generate daily irrigation advisories based on weather forecasts and crop water requirements.
-Explain yield predictions using SHAP feature importance.
-Visualize agricultural insights through an interactive Streamlit dashboard.
+- **Production overview:** summarizes production, cultivated area, and weighted yield for selected crop, state, district, season, and year filters.
+- **Weather analytics:** compares historical crop yields with matched weather observations, with 2D and 3D charts and descriptive correlations.
+- **Regional map:** maps production/yield statistics using the bundled India state boundaries.
+- **Soil nutrients:** explores N, P, and K values in the crop-recommendation sample dataset.
+- **Irrigation advisory:** retrieves a 3-, 5-, or 7-day forecast for an Indian location and estimates a daily crop-water balance. A manual, single-day calculator is also available.
+- **Yield prediction:** uses the bundled weather-aware Random Forest model to estimate yield and production for selected crop, state, season, district, area, and year.
+- **Reports:** downloads the filtered production records as CSV and a summary of the selected records as PDF.
+- **Display mode:** switch between light and dark dashboard themes.
 
- 🎯 Project Objectives
- 
-Build a machine learning model to predict crop yield using weather, soil, crop, and seasonal information.
-Compare Linear Regression, Random Forest, and XGBoost regression models.
-Analyze how rainfall, temperature, humidity, and soil nutrients influence crop productivity.
-Develop a crop water-stress alert system to identify potential irrigation needs.
-Create district-level choropleth maps to visualize regional yield performance.
-Develop an interactive dashboard for agricultural analytics and decision support.
-Generate downloadable seasonal crop reports containing yield predictions, risk factors, and irrigation recommendations.
+## How the app works
 
-✨ Key Features
-1. 🌱 Crop Yield Prediction
+### Daily irrigation advisory
 
-Users can select a crop, district, and season to estimate the expected crop yield.
+1. Enter a city, district, or town in India, then choose a crop, crop growth stage, and forecast horizon.
+2. The app resolves the location using the Open-Meteo Geocoding API and requests daily maximum temperature, mean relative humidity, precipitation, and FAO reference evapotranspiration (ET₀) from the Open-Meteo Forecast API.
+3. For each forecast day, it estimates crop water use as:
 
-Inputs:
+   `crop water use = ET₀ × crop Kc × growth-stage multiplier`
 
-Crop type
-District or region
-Growing season
-Total growing-season rainfall
-Average temperature
-Growing degree days (GDD)
-Soil nitrogen (N), phosphorus (P), and potassium (K)
+4. It estimates effective rainfall as 80% of forecast precipitation, subtracts that from crop water use, and divides the resulting net need by an assumed irrigation efficiency of 85% to estimate gross irrigation depth.
+5. The results table shows the daily forecast, estimated water use and irrigation depths, weather-stress indicator, and an action message.
 
-Outputs:
+Forecast data is cached for 30 minutes. If the forecast service is unreachable, use **Use manual weather inputs instead** to calculate a single-day estimate. The manual calculator accepts ET₀, rainfall, temperature, and humidity.
 
-Predicted yield in tons per hectare
-Estimated prediction interval
-Major factors influencing the prediction
-Potential weather and soil-related risks
-2. 💧 Smart Irrigation Advisory
+The crop coefficients and stage multipliers are illustrative defaults in `src/irrigation.py`; they are not calibrated for a particular farm, soil, irrigation system, or local crop calendar. The forecast advisory calculates each day independently; it does not carry soil water balance forward between forecast days. Always check field soil moisture and local agronomic guidance before irrigating.
 
-The system evaluates weather conditions and crop water requirements to recommend irrigation actions.
+### Crop yield prediction
 
-Example advisory:
+The app loads `models/random_forest_weather.joblib` and uses the artifact's declared feature names to prepare a prediction. It pairs the selected state with its latest available historical state/year weather record, then estimates yield and multiplies that yield by the converted cultivated area to estimate production.
 
-Today's forecast indicates a temperature of 35°C with no expected rainfall. Check soil moisture and crop water requirements before irrigating. The system may recommend a net irrigation depth of 15 mm if supported by the crop water balance.
+The bundled model and weather observations represent historical data through 2014. Choosing a prediction year outside 2000–2014 is an extrapolation, not a current or live forecast. The app does not generate a confidence interval or an explanation for an individual prediction.
 
-The advisory considers:
+## Project structure
 
-Temperature and humidity
-Forecast rainfall
-Crop type and growth stage
-Crop water requirements
-Estimated crop water stress
-Soil moisture or water-balance information, when available
-3. 📊 Weather–Yield Correlation Analysis
-
-Explore how weather conditions influence crop productivity through interactive visualizations.
-
-Rainfall versus crop yield
-Temperature versus crop yield
-Humidity versus crop yield
-Crop-wise and season-wise comparisons
-Correlation heatmaps
-Historical weather and yield trends
-4. 🗺️ Regional Production Mapping
-
-Visualize district-level crop yield and production patterns across India.
-
-High-yield and low-yield regions
-Crop-wise production distribution
-District-level yield comparisons
-Seasonal production patterns
-Interactive choropleth maps
-5. 🧪 Soil Nutrient Analysis
-
-Study the relationship between soil nutrient levels and agricultural productivity.
-
-Nitrogen (N) distribution
-Phosphorus (P) distribution
-Potassium (K) distribution
-Soil nutrient comparisons across crops
-Relationship between nutrient levels and predicted yield
-6. 🔍 Explainable AI with SHAP
-
-SHAP (SHapley Additive exPlanations) helps explain individual model predictions.
-
-The dashboard will identify factors that increase or decrease a predicted yield, such as:
-
-Lower-than-usual growing-season rainfall
-High temperatures during critical growth stages
-Favorable soil nutrient levels
-Differences between crops, districts, and seasons
-7. 📄 Seasonal Crop Report
-
-Generate a downloadable PDF report containing:
-
-Crop and district information
-Predicted seasonal yield
-Prediction interval and model information
-Weather and soil risk factors
-SHAP-based prediction explanations
-Irrigation advisory summary
-🛠️ Technology Stack
-Category	Technologies
-Programming Language	Python
-Data Processing	Pandas, NumPy
-Data Visualization	Plotly, Matplotlib, Seaborn
-Machine Learning	scikit-learn, XGBoost
-Explainable AI	SHAP
-Web Application	Streamlit
-Geospatial Visualization	Folium, streamlit-folium
-Weather Data	Open-Meteo Historical Weather API
-Data Sources	Kaggle, India Open Government Data Platform
-Report Generation	Python PDF generation library
-Version Control	Git, GitHub
-📂 Project Structure
-crop-yield-irrigation/
-│
-├── app.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-│
+```text
+.
+├── app.py                         # Streamlit dashboard
+├── requirements.txt               # Python dependencies
+├── assets/
+│   ├── india_state.geojson         # State boundaries for the map
+│   ├── logo.png
+│   ├── maize_corn_plant.glb        # Overview background model
+│   └── rice_plant.glb
 ├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── external/
-│
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_weather_yield_analysis.ipynb
-│   ├── 03_soil_nutrient_analysis.ipynb
-│   ├── 04_yield_model_training.ipynb
-│   └── 05_irrigation_analysis.ipynb
-│
+│   ├── raw/                        # Source data, if supplied separately
+│   └── processed_data/             # Dashboard input CSVs
+├── models/                         # Trained model artifacts
+├── notebooks/                      # Exploratory and project notebooks
+├── outputs/                        # Generated analysis/model outputs
 ├── src/
-│   ├── data_preprocessing.py
-│   ├── feature_engineering.py
-│   ├── train_model.py
-│   ├── predict_yield.py
-│   ├── irrigation_advisor.py
-│   ├── shap_explainer.py
-│   └── report_generator.py
-│
-├── models/
-│   ├── yield_model.pkl
-│   └── preprocessor.pkl
-│
-├── dashboard/
-│   ├── yield_dashboard.py
-│   ├── irrigation_dashboard.py
-│   ├── analytics_dashboard.py
-│   └── regional_map.py
-│
-├── reports/
-│   └── model_comparison.md
-│
-└── tests/
-    ├── test_preprocessing.py
-    └── test_predictions.py
+│   ├── explain.py                  # Model explanation workflow
+│   ├── explain_weather.py          # Weather model explanation workflow
+│   ├── irrigation.py               # Water balance and weather-stress estimates
+│   ├── merge_weather_crop.py       # Crop/weather data preparation
+│   ├── predict.py                  # Prediction helper for training artifacts
+│   ├── preprocess.py               # Data preparation helpers
+│   ├── train.py                    # Model training workflow
+│   ├── train_weather.py            # Weather-aware model training workflow
+│   ├── weather_correlation.py      # Weather/yield analysis
+│   └── weather_forecast.py         # Open-Meteo geocoding and forecast client
+└── tests/                          # Test directory
+```
 
+The project also includes a `venv/` folder in some local copies. It is an environment-specific directory and should not be copied or committed; create your own virtual environment instead.
 
-Note: This is the proposed project structure. Model files, datasets, and modules will be added as development progresses. Large datasets and generated model artifacts should generally not be committed directly to GitHub.
+## Data and model files
 
-📚 Dataset Sources
-1. India Crop Production Dataset
+The dashboard expects the following processed files under `data/processed_data/`:
 
-Source: Kaggle Datasets
+| File | Purpose | Required columns |
+|---|---|---|
+| `crop_production_preprocessed.csv` | Main production records; required for app startup | `State`, `District`, `Year`, `Season`, `Crop`, `Area`, `Production`; `Yield` is optional and is derived as `Production / Area` when absent |
+| `crop_weather_merged.csv` | Matched crop/weather records for weather analytics | Production columns plus `Yield`, `Mean_Temperature`, `Avg_Max_Temp`, `Avg_Min_Temp`, `Total_Precipitation_mm`, `Max_Wind_Speed` |
+| `india_states_yearly_weather_preprocessed.csv` | State/year weather context and yield-model inputs | `State`, `Year`, and the five weather columns above |
+| `crop_recommendation_preprocessed.csv` | Soil-sample exploration | `N`, `P`, `K`, `label`; `temperature`, `humidity`, `ph`, and `rainfall` are used when present |
 
-Used for:
+Other related files, such as `weather_preprocessed.csv`, `crop_weather_merge_all.csv`, and `india_states_yearly_weather_2000_2014.csv`, may be intermediate or analysis inputs. The Streamlit dashboard uses the exact filenames in the table above.
 
-Historical crop production records
-Crop-wise and district-wise analysis
-Seasonal and annual production trends
-Historical yield calculations, where area data is available
-2. Crop Recommendation Dataset
+The yield page uses `models/random_forest_weather.joblib`. Other model artifacts in `models/` are retained for training and comparison workflows; they are not automatically selected by the dashboard. The regional map uses `assets/india_state.geojson`.
 
-Source: Kaggle Datasets
+### Units and data interpretation
 
-Used for:
+- Cultivated area is stored/displayed in **hectares**; the yield page also accepts acres and converts them to hectares.
+- Production is in **metric tonnes**.
+- Yield is in **metric tonnes per hectare**.
+- Crop/weather data and state/year weather observations are historical. Repeated state/year weather values across crop records do not represent independent daily observations.
+- Soil recommendation samples are not linked to the production rows. Their nutrient distributions must not be interpreted as measured nutrient-to-yield relationships.
 
-Soil nitrogen, phosphorus, and potassium values
-Temperature and humidity observations
-Rainfall and soil pH information
-Exploratory soil and crop suitability analysis
+Use source datasets with appropriate permissions and retain their attribution and license information. Do not treat different datasets as linked unless the location, time period, and measurement definitions genuinely match.
 
-Important: Crop recommendation datasets may not contain measured historical yields. Their soil and weather observations should not be treated as directly linked yield labels unless a valid matching relationship exists.
+## Install and run
 
-3. Weather Data
+### Prerequisites
 
-Source: Open-Meteo Historical Weather API
+- Python 3.10–3.12 recommended for compatibility with the pinned scikit-learn dependency.
+- Internet access for the live irrigation forecast.
+- The processed data, map, logo, and model files described above.
 
-Used for:
+### Windows PowerShell
 
-Historical daily rainfall
-Temperature observations
-Relative humidity, where available
-Growing-season weather summaries
-Weather feature engineering
-4. Additional Agricultural Resources
-India Open Government Data Platform
-FAO Crop Water Information
-SHAP Documentation
-Streamlit Documentation
-⚙️ Methodology
-Step 1: Data Collection
+From the project directory:
 
-Collect historical crop production, cultivated area, weather, and soil nutrient data from the available sources.
-
-Step 2: Data Cleaning and Integration
-Handle missing values and duplicate records.
-Standardize crop names, district names, and season labels.
-Validate units and measurement ranges.
-Aggregate daily weather data into crop-growing-season features.
-Merge datasets using appropriate geographical, temporal, and crop identifiers.
-Document missing data and assumptions.
-Step 3: Exploratory Data Analysis
-
-Analyze:
-
-Crop yield trends over the past 20 years, where records permit.
-Districts with the highest and lowest yields.
-Weather–yield relationships.
-Soil nutrient distributions.
-Regional and seasonal production patterns.
-Step 4: Feature Engineering
-
-Potential features include:
-
-Total rainfall during the growing season
-Average, minimum, and maximum temperature
-Relative humidity statistics
-Growing degree days
-Soil nitrogen, phosphorus, and potassium
-Soil pH
-Crop type, district, and season
-Crop water requirements and growth stage, for irrigation
-Step 5: Model Training
-
-Train and compare the following regression algorithms:
-
-Linear Regression — baseline model
-Random Forest Regressor — nonlinear model
-XGBoost Regressor — gradient-boosting model
-
-Evaluate the models using:
-
-Mean Absolute Error (MAE)
-Root Mean Squared Error (RMSE)
-Coefficient of Determination (R²)
-
-Use chronological or grouped validation where appropriate to reduce information leakage between years, districts, and repeated observations.
-
-Step 6: Model Explainability
-
-Use SHAP to identify the main features contributing to predictions and visualize their effects at both the dataset and individual-prediction levels.
-
-Step 7: Irrigation Advisory Development
-
-Estimate crop water stress and irrigation requirements from weather, crop stage, and available water-balance inputs.
-
-The irrigation logic should distinguish between:
-
-Forecast rainfall
-Crop evapotranspiration
-Effective rainfall
-Available soil moisture
-Net irrigation requirement
-Gross irrigation requirement, accounting for irrigation efficiency when known
-Step 8: Dashboard Development
-
-Build a Streamlit application with interactive pages for yield prediction, irrigation advice, weather–yield analysis, soil nutrient profiling, and regional production maps.
-
-Step 9: Reporting and Deployment
-
-Generate seasonal crop reports, document model limitations, and deploy the application using an appropriate hosting platform.
-
-🚀 Installation and Setup
-Prerequisites
-Python 3.10 or a compatible version supported by the selected libraries
-Git
-A code editor such as Visual Studio Code
-Internet access for retrieving weather data
-1. Clone the Repository
-git clone https://github.com/YOUR-USERNAME/crop-yield-irrigation.git
-cd crop-yield-irrigation
-
-
-Replace YOUR-USERNAME with your GitHub username.
-
-2. Create a Virtual Environment
-python -m venv .venv
-
-
-Activate it:
-
-Windows
-
-.venv\Scripts\activate
-
-
-macOS/Linux
-
-source .venv/bin/activate
-
-3. Install Dependencies
-
-Create a requirements.txt file with the following initial dependencies:
-
-streamlit
-pandas
-numpy
-scikit-learn
-xgboost
-shap
-plotly
-matplotlib
-seaborn
-folium
-streamlit-folium
-requests
-joblib
-geopandas
-reportlab
-
-
-Install the packages:
-
-pip install -r requirements.txt
-
-
-Use compatible package versions and pin the tested versions before deployment.
-
-4. Prepare the Datasets
-
-Place downloaded or generated datasets in the appropriate folders:
-
-data/raw/
-data/processed/
-data/external/
-
-
-Check the dataset licenses and terms before redistribution. Keep API credentials and private configuration out of version control.
-
-5. Run the Application
-
-After creating the Streamlit entry point:
-
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 streamlit run app.py
+```
 
+If PowerShell prevents environment activation, invoke the environment's executable directly:
 
-The application will display a local URL in the terminal.
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
 
-📈 Model Evaluation
+### macOS or Linux
 
-The models will be compared using a common validation strategy.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+streamlit run app.py
+```
 
-Model	MAE	RMSE	R²
-Linear Regression	To be measured	To be measured	To be measured
-Random Forest	To be measured	To be measured	To be measured
-XGBoost	To be measured	To be measured	To be measured
+Streamlit prints a local URL (usually `http://localhost:8501`) when the app starts. Stop the local server with **Ctrl+C** in the terminal.
 
-The final model will be selected based on validation performance, generalization across districts and years, and suitability for practical use.
+## Using the dashboard
 
-Prediction intervals should be estimated using a validated method rather than assumed from a single point prediction.
+1. Start the app using the instructions above.
+2. Choose a dashboard page from **Workspace** in the sidebar.
+3. Use the sidebar filters for crop, state, district, season, and crop year where applicable.
+4. On **Irrigation advisory**, enter a location and submit the forecast form. The page needs an internet connection to contact Open-Meteo. If that is unavailable, expand the manual-input option.
+5. On **Yield prediction**, select the prediction inputs and submit the form. Review the displayed historical-weather year and any extrapolation warning.
+6. On **Reports**, download the current filtered records as CSV or the production summary as PDF.
 
-👥 Team Responsibilities
-Data Science & Data Analytics Team
-Explore historical crop yield and production records.
-Analyze weather–yield correlations.
-Study soil nutrient distributions and their relationships with yield.
-Develop district-level choropleth maps.
-Build interactive agricultural analytics dashboards.
-Prepare data visualizations and analytical reports.
-AI/ML Team
-Develop the data preprocessing pipeline and predictive features.
-Train Linear Regression, Random Forest, and XGBoost models.
-Evaluate and compare model performance.
-Implement SHAP-based explanations.
-Develop crop water-stress indicators.
-Build daily irrigation advisory logic.
-Integrate trained models with the Streamlit application.
-Joint Responsibilities
-Dataset integration and validation
-Feature selection and evaluation strategy
-Dashboard integration
-Seasonal report generation
-Testing, documentation, and final demonstration
-🗓️ Development Roadmap
-Week 1 — Data Preparation and Baseline Model
-Collect crop production and weather datasets.
-Clean and standardize the datasets.
-Explore crop yield trends and regional patterns.
-Engineer initial weather and soil features.
-Train a Linear Regression baseline.
-Week 2 — Advanced Analytics and Machine Learning
-Develop regional production maps.
-Analyze weather–yield correlations.
-Study soil nutrient relationships.
-Train Random Forest and XGBoost models.
-Generate SHAP explanations.
-Implement initial irrigation advisory rules.
-Week 3 — Streamlit Application
-Develop the crop yield prediction interface.
-Integrate the trained model.
-Build the daily irrigation advisory page.
-Add interactive weather analytics.
-Integrate district-level maps.
-Freeze the minimum viable product (MVP).
-Week 4 — Validation and Final Delivery
-Compare model performance and document results.
-Refine crop water-stress analysis.
-Test data processing and predictions.
-Implement downloadable seasonal reports.
-Document limitations and assumptions.
-Prepare the final project demonstration.
-⚠️ Important Considerations
-Data compatibility: District-level production records and crop recommendation datasets may not share matching locations, years, or individual fields. They must not be merged as though they represent the same observations without evidence.
-Yield calculation: Yield should be calculated as production divided by harvested area, using consistent units.
-Data leakage: Weather summaries and soil values must reflect information legitimately available for the prediction being made.
-Prediction uncertainty: Report a confidence or prediction interval only when a suitable method has been implemented and validated.
-Irrigation accuracy: Temperature and humidity alone cannot determine the exact water requirement of a field. Reliable advisories should also account for crop stage, evapotranspiration, rainfall, soil water availability, and irrigation efficiency when available.
-Regional mapping: District boundary files must use consistent geographic identifiers and administrative boundaries.
-Decision support: Predictions and irrigation recommendations are estimates, not guarantees. Field conditions and local agricultural guidance should be considered before acting.
-🔮 Future Enhancements
-Integrate real-time weather forecasts.
-Incorporate satellite imagery and vegetation indices.
-Add crop growth-stage detection.
-Integrate soil moisture sensor data.
-Support additional crops and geographical regions.
-Add multilingual support for farmers.
-Develop SMS or mobile notifications for irrigation alerts.
-Integrate agricultural market prices and profitability estimates.
-🤝 Contributing
+The dashboard may show a clear warning or omit a weather/soil feature if an optional processed dataset is missing. The production CSV and required visual assets must be present for startup.
 
-Contributions are welcome!
+## Training and analysis scripts
 
-Fork the repository.
-Create a feature branch.
-Commit your changes with clear messages.
-Push the branch to your fork.
-Open a pull request describing your changes.
-📜 License
+The repository includes notebooks and Python scripts for data preparation, weather joins, model training, predictions, explanations, and weather/yield analysis. The current dashboard loads prebuilt artifacts and processed CSVs; it does not run a training job automatically.
 
-Choose an appropriate open-source license before publishing the repository. For example, the MIT License may be suitable if you want others to reuse and modify your code, subject to its terms.
+The main weather-aware training script is `src/train_weather.py`. It reads `data/processed_data/crop_weather_merged.csv`, trains Random Forest and XGBoost regressors, evaluates them, and writes model/output artifacts. Review the input paths and script settings before running it:
 
-🙌 Acknowledgments
+```powershell
+.\.venv\Scripts\python.exe src\train_weather.py
+```
 
-We acknowledge the open-data and open-source communities supporting agricultural research, including Kaggle contributors, Open-Meteo, India's Open Government Data Platform, the FAO, scikit-learn, XGBoost, SHAP, Streamlit, Plotly, and Folium.
+```bash
+python src/train_weather.py
+```
 
-Built with Python, Data Science, and Machine Learning to support smarter agricultural decisions. 🌱
+Training requires the matching input dataset and XGBoost. Training or replacing a model can change prediction behavior; validate it on a suitable holdout set before using it in the dashboard.
+
+## Limitations and responsible use
+
+- This dashboard is not an official agricultural service and is not a substitute for local extension or agronomy advice.
+- Forecast availability and accuracy depend on Open-Meteo and the selected location. Forecast values can change.
+- Irrigation coefficients, effective-rain fraction, irrigation efficiency, and stage multipliers are general illustrative assumptions. The advisory has no field soil sensor input in the forecast workflow.
+- Weather stress is an atmospheric-demand screening proxy based on temperature and humidity, not a measured Crop Water Stress Index (CWSI). Physiological CWSI requires canopy-temperature measurements and wet/dry reference baselines.
+- Daily irrigation estimates are independent and do not account for soil texture, rooting depth, field capacity, irrigation timing, runoff, drainage, or a changing soil-water balance.
+- Yield-model inputs rely on historical records ending in 2014, and predictions for newer years extrapolate beyond that training period. The dashboard does not display uncertainty intervals.
+- Weather/yield visualizations show association, not causation. The soil sample dataset is not matched to production records.
+- Results depend on input data quality, coverage, definitions, and units. Review data provenance and validate predictions for the intended region and crop before operational use.
+
+## Troubleshooting
+
+| Symptom | What to check |
+|---|---|
+| App says the production dataset is missing | Confirm `data/processed_data/crop_production_preprocessed.csv` exists and is readable. |
+| A weather, soil, or map section is unavailable | Check that its optional CSV or `assets/india_state.geojson` exists and includes the required columns/identifiers. |
+| Yield model unavailable | Confirm `models/random_forest_weather.joblib` exists and can be loaded in the active environment. The model was serialized with a particular scikit-learn version; use the pinned version in `requirements.txt`. |
+| Location cannot be found | Try a more specific Indian city or district name. The forecast geocoder is restricted to India. |
+| Forecast request fails | Check internet access and try again. Alternatively, use the manual single-day advisory. |
+| Dependency installation fails | Check that the selected Python version is compatible with the pinned dependencies, then recreate the virtual environment and reinstall. |
+
+## Technology
+
+- Python, pandas, NumPy
+- Streamlit
+- Plotly
+- scikit-learn, XGBoost, joblib
+- ReportLab
+- Open-Meteo Geocoding and Forecast APIs
+- GeoJSON state boundaries
+
