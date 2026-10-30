@@ -23,7 +23,7 @@ The app is a decision-support and educational tool. Its yield predictions and ir
 - **Weather analytics:** compares historical crop yields with matched weather observations, with 2D and 3D charts and descriptive correlations.
 - **Regional map:** maps production/yield statistics using the bundled India state boundaries.
 - **Soil nutrients:** explores N, P, and K values in the crop-recommendation sample dataset.
-- **Irrigation advisory:** retrieves a 3-, 5-, or 7-day forecast for an Indian location and estimates a daily crop-water balance. A manual, single-day calculator is also available.
+- **Irrigation advisory:** retrieves a 3-, 5-, or 7-day forecast for an Indian location and estimates a daily crop-water balance. The manual calculator is prefilled with forecast-period daily averages when available and provides a descriptive one-day water-balance summary.
 - **Yield prediction:** uses the bundled weather-aware Random Forest model to estimate yield and production for selected crop, state, season, district, area, and year.
 - **Reports:** downloads the filtered production records as CSV and a summary of the selected records as PDF.
 - **Display mode:** switch between light and dark dashboard themes.
@@ -41,7 +41,7 @@ The app is a decision-support and educational tool. Its yield predictions and ir
 4. It estimates effective rainfall as 80% of forecast precipitation, subtracts that from crop water use, and divides the resulting net need by an assumed irrigation efficiency of 85% to estimate gross irrigation depth.
 5. The results table shows the daily forecast, estimated water use and irrigation depths, weather-stress indicator, and an action message.
 
-Forecast data is cached for 30 minutes. If the forecast service is unreachable, use **Use manual weather inputs instead** to calculate a single-day estimate. The manual calculator accepts ET₀, rainfall, temperature, and humidity.
+Forecast data is cached for 30 minutes. **Use manual weather inputs instead** accepts ET₀, rainfall, temperature, and humidity for a one-day estimate. After a successful forecast, these inputs are prefilled with the average daily temperature, humidity, rainfall, and ET₀ over the returned forecast days; each value can be edited before calculating. The manual result describes crop water use, effective rainfall, net water need, estimated gross irrigation, and the weather-only stress indicator.
 
 The crop coefficients and stage multipliers are illustrative defaults in `src/irrigation.py`; they are not calibrated for a particular farm, soil, irrigation system, or local crop calendar. The forecast advisory calculates each day independently; it does not carry soil water balance forward between forecast days. Always check field soil moisture and local agronomic guidance before irrigating.
 
@@ -206,4 +206,3 @@ Training requires the matching input dataset and XGBoost. Training or replacing 
 - ReportLab
 - Open-Meteo Geocoding and Forecast APIs
 - GeoJSON state boundaries
-
