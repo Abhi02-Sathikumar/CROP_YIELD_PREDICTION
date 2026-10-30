@@ -163,7 +163,7 @@ The dashboard may show a clear warning or omit a weather/soil feature if an opti
 
 The repository includes notebooks and Python scripts for data preparation, weather joins, model training, predictions, explanations, and weather/yield analysis. The current dashboard loads prebuilt artifacts and processed CSVs; it does not run a training job automatically.
 
-The main weather-aware training script is `src/train_weather.py`. It reads `data/processed_data/crop_weather_merged.csv`, trains Random Forest and XGBoost regressors, evaluates them, and writes model/output artifacts. Review the input paths and script settings before running it:
+The main weather-aware training script is `src/train_weather.py`. It reads `data/processed_data/crop_weather_merged.csv`, trains Random Forest and XGBoost regressors, evaluates them, and writes model/output artifacts. The target (`Yield`) is trained on a `log1p` scale and transformed back to yield units for predictions, which reduces the influence of the dataset's highly skewed yield values. Production is excluded from model features because it is used to calculate the target. Review the input paths and script settings before running it:
 
 ```powershell
 .\.venv\Scripts\python.exe src\train_weather.py
