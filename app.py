@@ -1133,13 +1133,23 @@ elif page == "Soil nutrients":
         st.caption("Regional comparisons and nutrient-to-yield relationships are not available because these samples are not linked to production records.")
 
 elif page == "Irrigation advisory":
+    manual_input_defaults = {
+        "manual_irrigation_temperature": 35.0,
+        "manual_irrigation_humidity": 40.0,
+        "manual_irrigation_rain": 0.0,
+        "manual_irrigation_et0": 5.0,
+    }
+    for input_key, default_value in manual_input_defaults.items():
+        st.session_state.setdefault(input_key, default_value)
+    st.session_state.setdefault("manual_irrigation_forecast_source", "")
+
     st.header("Daily irrigation advisory")
     st.caption(
-        "Use recent local weather forecast to estimate crop water use and daily "
+        "Use local weather forecast to estimate crop water use and daily "
         "irrigation need. Confirm every recommendation with field soil moisture."
     )
     with st.container(border=True):
-        st.subheader("Recent forecast")
+        st.subheader("Forecast")
         with st.form("daily_irrigation_advisory_form"):
             input_columns = st.columns(2)
             with input_columns[0]:
@@ -1169,10 +1179,34 @@ elif page == "Irrigation advisory":
             )
 
         if forecast_submitted:
+            st.session_state["manual_irrigation_forecast_source"] = ""
             try:
                 forecast_place, forecast_records = load_daily_forecast(
                     forecast_location,
                     forecast_days,
+                )
+                forecast_average_inputs = {
+                    "manual_irrigation_temperature": round(
+                        float(np.mean([day["temperature_c"] for day in forecast_records])),
+                        1,
+                    ),
+                    "manual_irrigation_humidity": round(
+                        float(np.mean([day["humidity_pct"] for day in forecast_records])),
+                        1,
+                    ),
+                    "manual_irrigation_rain": round(
+                        float(np.mean([day["rain_mm"] for day in forecast_records])),
+                        1,
+                    ),
+                    "manual_irrigation_et0": round(
+                        float(np.mean([day["et0_mm"] for day in forecast_records])),
+                        2,
+                    ),
+                }
+                for input_key, average_value in forecast_average_inputs.items():
+                    st.session_state[input_key] = average_value
+                st.session_state["manual_irrigation_forecast_source"] = (
+                    f"{len(forecast_records)}-day average from {forecast_place}"
                 )
                 daily_rows = []
                 for weather_day in forecast_records:
@@ -1239,7 +1273,17 @@ elif page == "Irrigation advisory":
                 )
 
         with st.expander("Use manual weather inputs instead"):
-            st.caption("Use this option if the forecast service is unavailable. Enter values for one day.")
+            forecast_source = st.session_state["manual_irrigation_forecast_source"]
+            if forecast_source:
+                st.caption(
+                    f"Inputs are prefilled with the {forecast_source}. "
+                    "Edit any value to calculate a different one-day scenario."
+                )
+            else:
+                st.caption(
+                    "Enter values for one day, or load a forecast above to prefill "
+                    "these inputs with its daily averages."
+                )
             with st.form("manual_irrigation_advisory_form"):
                 manual_columns = st.columns(2)
                 with manual_columns[0]:
@@ -1247,28 +1291,28 @@ elif page == "Irrigation advisory":
                         "Forecast temperature (°C)",
                         min_value=-20.0,
                         max_value=60.0,
-                        value=35.0,
                         step=1.0,
+                        key="manual_irrigation_temperature",
                     )
                     manual_humidity = st.number_input(
                         "Forecast relative humidity (%)",
                         min_value=0.0,
                         max_value=100.0,
-                        value=40.0,
                         step=1.0,
+                        key="manual_irrigation_humidity",
                     )
                 with manual_columns[1]:
                     manual_rain = st.number_input(
                         "Expected rainfall (mm/day)",
                         min_value=0.0,
-                        value=0.0,
                         step=1.0,
+                        key="manual_irrigation_rain",
                     )
                     manual_et0 = st.number_input(
                         "Reference ET₀ (mm/day)",
                         min_value=0.0,
-                        value=5.0,
                         step=0.5,
+                        key="manual_irrigation_et0",
                     )
                 manual_submitted = st.form_submit_button("Calculate manual advisory")
 
@@ -1290,7 +1334,8 @@ elif page == "Irrigation advisory":
                 except ValueError as error:
                     st.error(f"Could not calculate the advisory: {error}")
                 else:
-                    metric_columns = st.columns(3)
+                    st.subheader("Manual advisory summary")
+                    metric_columns = st.columns(4)
                     metric_columns[0].metric(
                         "Weather stress proxy",
                         f"{stress['index']:.2f} / 1.00",
@@ -1301,20 +1346,31 @@ elif page == "Irrigation advisory":
                         f"{stress['vpd_kpa']:.2f} kPa",
                     )
                     metric_columns[2].metric(
+                        "Estimated crop water use",
+                        f"{advisory['crop_water_use_mm_day']:.1f} mm/day",
+                    )
+                    metric_columns[3].metric(
                         "Estimated gross irrigation",
                         f"{advisory['gross_irrigation_mm']:.1f} mm",
                     )
-                    if advisory["net_irrigation_mm"] >= 0.5:
-                        st.info(
-                            f"Your {advisory_crop} field may need about "
-                            f"{advisory['gross_irrigation_mm']:.1f} mm of irrigation. "
-                            "Check soil moisture before applying."
-                        )
-                    else:
-                        st.success(
-                            "The estimated water balance does not indicate irrigation "
-                            "today; verify soil moisture in the field."
-                        )
+                    st.write(
+                        f"For {advisory_crop} at the {growth_stage} growth stage, "
+                        f"estimated crop water use is "
+                        f"{advisory['crop_water_use_mm_day']:.1f} mm/day. "
+                        f"Expected rainfall is {advisory['forecast_rain_mm']:.1f} mm/day "
+                        f"({advisory['effective_rain_mm']:.1f} mm estimated effective "
+                        f"rain), leaving a net water need of "
+                        f"{advisory['net_irrigation_mm']:.1f} mm. Allowing for the "
+                        f"assumed 85% irrigation efficiency, the estimated gross "
+                        f"application is {advisory['gross_irrigation_mm']:.1f} mm."
+                    )
+                    st.info(advisory["recommendation"])
+                    st.write(
+                        f"The weather-only stress proxy is **{stress['status'].lower()}** "
+                        f"(index {stress['index']:.2f}/1.00). It describes atmospheric "
+                        "heat and moisture demand; it is not a measurement of crop or "
+                        "soil water stress."
+                    )
                     st.caption(advisory["warning"])
                     st.caption(stress["method_note"])
 
